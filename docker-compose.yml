@@ -1,21 +1,16 @@
 version: '3.7'
 
-volumes:
-  logs:
-    driver: local
-
 services:
-  slim:
+  php:
     image: graphicresources/itpg-api-coding-task:development
     working_dir: /var/www
     command: php -S 0.0.0.0:8080 -t public
     environment:
       docker: "true"
     ports:
-      - 8080:8080
+      - "8080:8080"
     volumes:
       - ./app:/var/www
-      - ./app/logs:/var/www/logs
     networks:
       - bridge
 

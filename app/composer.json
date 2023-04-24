@@ -1,47 +1,21 @@
 {
-  "name": "freepikcompany/api-coding-task-slim",
-  "description": "A Slim implementation of FC's Backend coding task",
+  "name": "freepikcompany/api-coding-task",
+  "description": "An API Backend coding task",
   "license": "MIT",
   "authors": [
     {
-      "name": "Juan Manuel Cabello Becerro",
-      "email": "jcabello@freepik.com"
-    },
-    {
-      "name": "Alejandro Ruiz Valle",
-      "email": "avalle@freepik.com"
+      "name": "Freepik Company Backend Guild",
+      "email": "dev@freepik.com"
     }
-
   ],
   "require": {
     "php": "^8.0",
     "ext-json": "*",
-    "monolog/monolog": "^3.0",
-    "php-di/php-di": "^7.0",
-    "slim/psr7": "^1.0",
-    "slim/slim": "^4.0",
-    "symfony/dotenv": "^6.0",
     "ext-pdo": "*"
-  },
-  "require-dev": {
-    "infection/infection": "^0.26",
-    "phpstan/phpstan": "^1.0",
-    "phpunit/phpunit": "^9.0",
-    "symfony/var-dumper": "^6.0"
-  },
-  "config": {
-    "process-timeout": 0,
-    "sort-packages": true,
-    "allow-plugins": true
   },
   "autoload": {
     "psr-4": {
       "App\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Tests\\": "test/"
     }
   }
 }

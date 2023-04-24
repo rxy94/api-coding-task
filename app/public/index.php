@@ -1,3 +1,7 @@
 <?php
 
-echo "Hola Mundo";
+header('Content-type: application/json');
+
+echo json_encode([
+    "message" => "Hola Mundo"
+]);

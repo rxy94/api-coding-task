@@ -1,4 +1,4 @@
-.PHONY: all test
+.PHONY: all
 
 # CONFIG ---------------------------------------------------------------------------------------------------------------
 ifneq (,$(findstring xterm,${TERM}))
@@ -46,7 +46,7 @@ help: ## Listar comandos disponibles en este Makefile
 build: build-container composer-install ## Construye las dependencias del proyecto
 
 build-container: ## Construye el contenedor de la aplicación
-	docker build --no-cache --target development -t $(IMAGE_NAME):$(IMAGE_TAG_DEV) ./docker
+	docker build --no-cache --target development -t $(IMAGE_NAME):$(IMAGE_TAG_DEV) .
 
 composer-install: ## Instala las dependencias via composer
 	docker run --rm -v ${PWD}/app:/app -w /app $(IMAGE_NAME):$(IMAGE_TAG_DEV) composer install --verbose
@@ -59,21 +59,3 @@ composer-require: ## Añade nuevas dependencias de producción
 
 composer-require-dev: ## Añade nuevas dependencias de desarrollo
 	docker run --rm -ti -v ${PWD}/app:/app -w /app $(IMAGE_NAME):$(IMAGE_TAG_DEV) composer require --dev --verbose
-
-# TESTING COMMANDS ----------------------------------------------------------------------------------------------------
-test: ## PHPUnit test
-	docker compose exec slim php ./vendor/bin/phpunit --no-coverage --color=always
-
-test-coverage: ## PHPUnit test and coverage
-	docker run --rm -v ${PWD}:/app -w /app $(IMAGE_NAME):$(IMAGE_TAG_DEV) rm -rf test/report || echo "No existe la carpeta de reportes previamente"
-	docker compose exec -e "XDEBUG_MODE=coverage" slim php ./vendor/bin/phpunit --color=always
-
-test-mutant: ## Infection Mutant Testing
-	docker run --rm -e "XDEBUG_MODE=coverage" -v ${PWD}/app:/app -w /app $(IMAGE_NAME):$(IMAGE_TAG_DEV) php ./vendor/bin/infection
-
-# OTHER COMMANDS & UTILS -----------------------------------------------------------------------------------------------
-up: ## Levanta los servicios
-	docker compose up -d
-
-down: ## Tira los servicios
-	docker compose down

@@ -13,8 +13,6 @@ RUN rm -rf /var/cache/apk/*
 
 EXPOSE 9000
 
-# --------------------------------------------------------------------------------------------------------------------
-
 FROM base as development
 
 ENV TZ ${TZ}
@@ -26,4 +24,4 @@ RUN apk add --update --upgrade tzdata autoconf g++ make \
     && pecl install xdebug \
     && docker-php-ext-enable xdebug
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
