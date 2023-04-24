@@ -26,8 +26,9 @@ A light infrastructure is provided with a populated MySQL database with example 
 
 ## Non functional requirements
 
+- The presence of unit, integration and acceptance tests will positively appreciated.
 - Use whatever you want to achieve this: MVC, hexagonal arquitecture, DDD, etc.
-- A profound knowledge about SOLID, YAGNI or KISS would be positively evaluated.
+- A deep knowledge about SOLID, YAGNI or KISS would be positively evaluated.
 - DevOps knowledge (GitHub Actions, Jenkins, etc.) would be appreciated too.
 - It's important to find a balance between code quality and deadline; releasing a non functional application in time or a perfect application out of time may be negatively evaluated.
 - Good and well-documented commits will be appreciated.
