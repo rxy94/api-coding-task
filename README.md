@@ -22,6 +22,15 @@ Type `make help` for more tasks present in `Makefile`.
 
 **Implement a CRUD (Create-Read-Update-Delete) API.**
 
+The following add-ons will be positively evaluated:
+
+- Authentication
+- Authorization
+- Cache
+- Documentation
+
+---
+
 A light infrastructure is provided with a populated MySQL database with example data and a web server using PHP built-in development server.
 
 ## Non functional requirements
