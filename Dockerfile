@@ -1,4 +1,4 @@
-FROM php:8-fpm-alpine3.15 as base
+FROM php:8-fpm-alpine3.15 AS base
 
 RUN apk --update add \
     alpine-sdk \
@@ -13,7 +13,7 @@ RUN rm -rf /var/cache/apk/*
 
 EXPOSE 9000
 
-FROM base as development
+FROM base AS development
 
 ENV TZ ${TZ}
 

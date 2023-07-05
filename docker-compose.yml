@@ -15,8 +15,7 @@ services:
       - bridge
 
   db:
-    image: percona
-    restart: always
+    image: percona:5.7
     ports:
       - "3306:3306"
     volumes:
