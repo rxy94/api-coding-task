@@ -8,19 +8,31 @@ require_once __DIR__ . '/characters.php';
 # Obtenemos la conexión a la base de datos
 $db = getDatabaseConnection();
 
-# Obtenemos el ID del personaje pasado por la URL si existe
+# Obtenemos el ID del personaje y el parámetro delete de la URL si existen
 $characterId = isset($_GET['id']) ? (int)$_GET['id'] : null;
+$delete = isset($_GET['delete']) ? (int)$_GET['delete'] : null;
 
-# Si existe el ID del personaje, lo eliminamos
-if ($characterId !== null) {
-    # Eliminamos el personaje especificado
-    deleteCharacterById($characterId, $db);
+# Si se pasa el parámetro delete y un ID, eliminamos el personaje
+if ($delete && $characterId !== null) {
+    
+    try {
 
-    # Devolvemos un mensaje de éxito
-    echo json_encode([
-        'status' => 'success',
-        'message' => "Personaje con ID {$characterId} eliminado correctamente"
-    ]);
+        deleteCharacterById($characterId, $db);
+
+        # Devolvemos un mensaje de éxito
+        echo json_encode([
+            'status' => 'success',
+            'message' => "Personaje con ID {$characterId} eliminado correctamente"
+        ]);
+
+    } catch (Exception $e) {
+
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+
 }
 
 # Obtenemos los parámetros de creación del personaje de la URL si existen
