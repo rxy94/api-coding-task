@@ -14,7 +14,7 @@ $delete = isset($_GET['delete']) ? (int)$_GET['delete'] : null;
 
 # Si se pasa el parámetro delete y un ID, eliminamos el personaje
 if ($delete && $characterId !== null) {
-    
+
     try {
 
         deleteCharacterById($characterId, $db);
@@ -59,14 +59,18 @@ if (isset($_GET['create'])) {
 
         # Validamos que el equipamiento exista
         $equipmentQuery = $db->prepare('SELECT id FROM equipments WHERE id = :id');
-        $equipmentQuery->execute(['id' => $equipmentId]);
+        $equipmentQuery->bindParam(':id', $equipmentId, PDO::PARAM_INT);
+        $equipmentQuery->execute();
+    
         if (!$equipmentQuery->fetch()) {
             throw new Exception('El equipamiento especificado no existe');
         }
 
         # Validamos que la facción exista
         $factionQuery = $db->prepare('SELECT id FROM factions WHERE id = :id');
-        $factionQuery->execute(['id' => $factionId]);
+        $factionQuery->bindParam(':id', $factionId, PDO::PARAM_INT);
+        $factionQuery->execute();
+        
         if (!$factionQuery->fetch()) {
             throw new Exception('La facción especificada no existe');
         }
