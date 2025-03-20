@@ -9,6 +9,7 @@ use Slim\Factory\AppFactory;
 use DI\ContainerBuilder;
 
 use App\Controller\CreateCharacterController;
+use App\Controller\CreateEquipmentController;
 use App\Controller\CreateFactionController;
 
 # Creamos el contenedor de dependencias
@@ -85,11 +86,38 @@ $app->get('/factionsList', function (Request $request, Response $response) use (
     }
 });
 
+# Ruta para obtener todos los equipamientos
+$app->get('/equipmentsList', function (Request $request, Response $response) use ($container) {
+    try {
+        $pdo = $container->get(PDO::class);
+        $query = $pdo->query('SELECT * FROM equipments');
+        $equipments = $query->fetchAll();
+
+        $response->getBody()->write(json_encode([
+            'data' => $equipments,
+            'message' => 'Equipamientos obtenidos correctamente'
+        ]));            
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+
+    } catch (\Exception $e) {
+        $response->getBody()->write(json_encode([
+            'error' => 'Error al obtener los equipamientos',
+            'message' => $e->getMessage()
+        ]));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+    }
+});
+
 # Ruta para crear un nuevo personaje
 $app->post('/characters', CreateCharacterController::class);
 
 # Ruta para crear una nueva facción
 $app->post('/factions', CreateFactionController::class);
+
+# Ruta para crear un nuevo equipamiento
+$app->post('/equipments', CreateEquipmentController::class);
 
 # Manejamos las rutas no encontradas
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {
