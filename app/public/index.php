@@ -9,6 +9,7 @@ use Slim\Factory\AppFactory;
 use DI\ContainerBuilder;
 
 use App\Controller\CreateCharacterController;
+use App\Controller\CreateFactionController;
 
 # Creamos el contenedor de dependencias
 $containerBuilder = new ContainerBuilder();
@@ -23,6 +24,9 @@ $containerBuilder->addDefinitions([
     },
     CreateCharacterController::class => function ($container) {
         return new CreateCharacterController($container->get(PDO::class));
+    },
+    CreateFactionController::class => function ($container) {
+        return new CreateFactionController($container->get(PDO::class));
     }
 ]);
 
@@ -34,17 +38,58 @@ $app = AppFactory::createFromContainer($container);
 
 # Ruta por defecto
 $app->get('/', function (Request $request, Response $response) use ($container) {
-    $pdo = $container->get(PDO::class);
-    $query = $pdo->query('SELECT * FROM characters');
-    $characters = $query->fetchAll();
+    try {
+        $pdo = $container->get(PDO::class);
+        $query = $pdo->query('SELECT * FROM characters');
+        $characters = $query->fetchAll();
 
-    $response->getBody()->write(json_encode($characters));
-    return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+        $response->getBody()->write(json_encode([
+            'data'=> $characters,
+            'message' => 'Personajes obtenidos correctamente'
+        ]));
+        
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+    } catch (\Exception $e) {
+        $response->getBody()->write(json_encode([
+            'error' => 'Error al obtener los personajes',
+            'message' => $e->getMessage()
+        ]));
+        
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+    }
+});
 
+# Ruta para obtener todas las facciones
+$app->get('/factionsList', function (Request $request, Response $response) use ($container) {
+    try {
+        $pdo = $container->get(PDO::class);
+        
+        // Intentar obtener las facciones directamente con PDO para verificar
+        $query = $pdo->query('SELECT * FROM factions');
+        $factions = $query->fetchAll();
+        
+        $response->getBody()->write(json_encode([
+            'data' => $factions,
+            'message' => 'Facciones obtenidas correctamente'
+        ]));
+        
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+
+    } catch (\Exception $e) {
+        $response->getBody()->write(json_encode([
+            'error' => 'Error al obtener las facciones',
+            'message' => $e->getMessage()
+        ]));
+        
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+    }
 });
 
 # Ruta para crear un nuevo personaje
 $app->post('/characters', CreateCharacterController::class);
+
+# Ruta para crear una nueva facción
+$app->post('/factions', CreateFactionController::class);
 
 # Manejamos las rutas no encontradas
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {

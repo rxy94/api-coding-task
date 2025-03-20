@@ -7,11 +7,12 @@ use PDOException;
 
 class Faction {
     private ?int $id = null;
-    private string $name;
+    private string $faction_name;
     private string $description;
+    private PDO $pdo;
 
-    public function __construct(private PDO $pdo)
-    {
+    public function __construct(PDO $pdo) {
+        $this->pdo = $pdo;
     }
 
     # Getters y setters
@@ -24,13 +25,13 @@ class Faction {
         return $this->id;
     }
 
-    public function setName(string $name): self {
-        $this->name = $name;
+    public function setName(string $faction_name): self {
+        $this->faction_name = $faction_name;
         return $this;
     }
 
     public function getName(): string {
-        return $this->name;
+        return $this->faction_name;
     }
 
     public function setDescription(string $description): self {
@@ -50,21 +51,21 @@ class Faction {
     public function save(): bool {
         try {
             if ($this->id === null) {
-                // Insert
-                $sql = "INSERT INTO factions (name, description) VALUES (:name, :description)";
+                // Insert   
+                $sql = "INSERT INTO factions (faction_name, description) VALUES (:faction_name, :description)";
                 $stmt = $this->pdo->prepare($sql);
                 $stmt->execute([
-                    ':name' => $this->name,
+                    ':faction_name' => $this->faction_name,
                     ':description' => $this->description
                 ]);
                 $this->id = (int) $this->pdo->lastInsertId();
             } else {
                 // Update
-                $sql = "UPDATE factions SET name = :name, description = :description WHERE id = :id";
+                $sql = "UPDATE factions SET faction_name = :faction_name, description = :description WHERE id = :id";
                 $stmt = $this->pdo->prepare($sql);
                 $stmt->execute([
                     ':id' => $this->id,
-                    ':name' => $this->name,
+                    ':faction_name' => $this->faction_name,
                     ':description' => $this->description
                 ]);
             }
@@ -169,7 +170,7 @@ class Faction {
         }
         
         return $faction
-            ->setName($data['name'])
+            ->setName($data['faction_name'])
             ->setDescription($data['description']);
 
     }
@@ -181,7 +182,7 @@ class Faction {
      */
     public function toArray(): array {
         $data = [
-            'name' => $this->name,
+            'faction_name' => $this->faction_name,
             'description' => $this->description
         ];
 
