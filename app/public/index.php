@@ -1,104 +1,56 @@
 <?php
 
-header('Content-type: application/json');
-
 require_once __DIR__ . '/database.php';
-require_once __DIR__ . '/characters.php';
+require __DIR__ . '/../vendor/autoload.php';
 
-# Obtenemos la conexión a la base de datos
-$db = getDatabaseConnection();
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Factory\AppFactory;
+use DI\ContainerBuilder;
 
-# Obtenemos el ID del personaje y el parámetro delete de la URL si existen
-$characterId = isset($_GET['id']) ? (int)$_GET['id'] : null;
-$delete = isset($_GET['delete']) ? (int)$_GET['delete'] : null;
+use App\Controller\CreateCharacterController;
 
-# Si se pasa el parámetro delete y un ID, eliminamos el personaje
-if ($delete && $characterId !== null) {
+# Creamos el contenedor de dependencias
+$containerBuilder = new ContainerBuilder();
 
-    try {
-
-        deleteCharacterById($characterId, $db);
-
-        # Devolvemos un mensaje de éxito
-        echo json_encode([
-            'status' => 'success',
-            'message' => "Personaje con ID {$characterId} eliminado correctamente"
+# Añadimos las definiciones al contenedor
+$containerBuilder->addDefinitions([
+    PDO::class => function () {
+        return new PDO('mysql:host=db;dbname=lotr', 'root', 'root', [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
         ]);
-
-    } catch (Exception $e) {
-
-        echo json_encode([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ]);
+    },
+    CreateCharacterController::class => function ($container) {
+        return new CreateCharacterController($container->get(PDO::class));
     }
+]);
 
-}
+# Creamos el contenedor
+$container = $containerBuilder->build();
 
-# Obtenemos los parámetros de creación del personaje de la URL si existen
-$name = isset($_GET['name']) ? $_GET['name'] : null;
-$birthDate = isset($_GET['birth_date']) ? $_GET['birth_date'] : null;
-$kingdom = isset($_GET['kingdom']) ? $_GET['kingdom'] : null;
-$equipmentId = isset($_GET['equipment_id']) ? (int)$_GET['equipment_id'] : null;
-$factionId = isset($_GET['faction_id']) ? (int)$_GET['faction_id'] : null; 
+# Creamos la aplicación con el contenedor
+$app = AppFactory::createFromContainer($container);
 
-# Si se pasa el parámetro create, creamos un nuevo personaje
-if (isset($_GET['create'])) {
+# Ruta por defecto
+$app->get('/', function (Request $request, Response $response) use ($container) {
+    $pdo = $container->get(PDO::class);
+    $query = $pdo->query('SELECT * FROM characters');
+    $characters = $query->fetchAll();
 
-    try {
-        # Validamos que todos los parámetros estén presentes
-        if (!$name || !$birthDate || !$kingdom || !$equipmentId || !$factionId ) {
-            throw new Exception('Todos los parámetros son obligatorios');
-        }
+    $response->getBody()->write(json_encode($characters));
+    return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 
-        # Validamos el formato de la fecha
-        $date = DateTime::createFromFormat('Y-m-d', $birthDate);
-        if (!$date) {
-            throw new Exception('El formato de fecha debe ser YYYY-MM-DD');
-        }
+});
 
-        # Validamos que el equipamiento exista
-        $equipmentQuery = $db->prepare('SELECT id FROM equipments WHERE id = :id');
-        $equipmentQuery->bindParam(':id', $equipmentId, PDO::PARAM_INT);
-        $equipmentQuery->execute();
-    
-        if (!$equipmentQuery->fetch()) {
-            throw new Exception('El equipamiento especificado no existe');
-        }
+# Ruta para crear un nuevo personaje
+$app->post('/characters', CreateCharacterController::class);
 
-        # Validamos que la facción exista
-        $factionQuery = $db->prepare('SELECT id FROM factions WHERE id = :id');
-        $factionQuery->bindParam(':id', $factionId, PDO::PARAM_INT);
-        $factionQuery->execute();
-        
-        if (!$factionQuery->fetch()) {
-            throw new Exception('La facción especificada no existe');
-        }
+# Manejamos las rutas no encontradas
+$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {
+    $response->getBody()->write("Ruta no encontrada");
+    return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+});
 
-        # Creamos un nuevo personaje
-        createCharacter($name, $birthDate, $kingdom, $equipmentId, $factionId, $db);
-
-        echo json_encode([
-            'status' => 'success',
-            'message' => 'Personaje creado correctamente'
-        ]);
-
-    } catch (Exception $e) {
-        
-        echo json_encode([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ]);
-    }
-
-}
-
-# Si no se pasa ningún parámetro, devolvemos todos los personajes en formato JSON
-$query = $db->query('SELECT * FROM characters');
-$characters = $query->fetchAll(PDO::FETCH_ASSOC);
-
-echo json_encode($characters);
-
-# Cerramos la conexión a la base de datos
-$db = null;
+$app->run();
 
