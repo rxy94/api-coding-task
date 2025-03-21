@@ -7,7 +7,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
-use Throwable;
 
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Service\CharacterValidator;
