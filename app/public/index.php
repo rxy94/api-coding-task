@@ -7,15 +7,24 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
+use Throwable;
 
-use App\Controller\Character\CreateCharacterController;
-use App\Controller\Character\ReadCharactersController;
+use App\Character\Domain\CharacterRepository;
+use App\Character\Domain\Service\CharacterValidator;
+use App\Character\Domain\Exception\CharacterValidationException;
+use App\Character\Application\CreateCharacterUseCase;
+use App\Character\Infrastructure\Http\CreateCharacterController;
+use App\Character\Infrastructure\MySQLCharacterRepository;
+
+use App\Controller\Character\ReadCharactersController; 
 
 use App\Controller\Equipment\CreateEquipmentController;
 use App\Controller\Equipment\ReadEquipmetsController;
 
 use App\Controller\Faction\CreateFactionController;
 use App\Controller\Faction\ReadFactionsController;
+use Psr\Container\ContainerInterface;
+
 
 # Creamos el contenedor de dependencias
 $containerBuilder = new ContainerBuilder();
@@ -46,7 +55,21 @@ $containerBuilder->addDefinitions([
         } catch (PDOException $e) {
             throw new PDOException("Error de conexión a la base de datos: " . $e->getMessage());
         }
-    }
+    },
+    CharacterRepository::class => function (ContainerInterface $c) {
+        return new MySQLCharacterRepository(
+            $c->get(PDO::class)
+        );
+    },
+    CharacterValidator::class => function () {
+        return new CharacterValidator();
+    },
+    CreateCharacterUseCase::class => function (ContainerInterface $c) {
+        return new CreateCharacterUseCase(
+            $c->get(CharacterRepository::class),
+            $c->get(CharacterValidator::class)
+        );
+    },
 ]);
 
 # Creamos el contenedor
@@ -54,6 +77,30 @@ $container = $containerBuilder->build();
 
 # Creamos la aplicación con el contenedor
 $app = AppFactory::createFromContainer($container);
+
+# Middleware para manejar excepciones. Captura las excepciones de validación de personajes.
+$app->addErrorMiddleware(true, true, true)
+    ->setErrorHandler(CharacterValidationException::class, function (
+        Throwable $exception,
+    ) use ($app) {
+        $response = $app->getResponseFactory()->createResponse();
+
+        // Comprobación explícita del tipo
+        if ($exception instanceof CharacterValidationException) {
+            $response->getBody()->write(json_encode([
+                'error' => 'Error de validación',
+                'messages' => $exception->getErrors()
+            ]));
+        } else {
+            $response->getBody()->write(json_encode([
+                'error' => 'Error desconocido',
+            ]));
+        }
+        
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus(400);
+    });
 
 # Rutas para personajes
 $app->post('/characters', CreateCharacterController::class);
@@ -68,7 +115,7 @@ $app->post('/equipments', CreateEquipmentController::class);
 $app->get('/equipments[/{id}]', ReadEquipmetsController::class);
 
 # Manejamos las rutas no encontradas
-$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {
+$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Response $response) {
     $response->getBody()->write("Ruta no encontrada");
     return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
 });

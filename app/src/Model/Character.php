@@ -92,9 +92,9 @@ class Character
      * @param PDO $pdo
      * @return self
      */
-    public function fromArray(array $data, PDO $pdo): self
+    public function fromArray(array $data): self
     {
-        $character = new self($pdo);
+        $character = new self($this->pdo);
         
         if (isset($data['id'])) {
             $character->setId($data['id']);
