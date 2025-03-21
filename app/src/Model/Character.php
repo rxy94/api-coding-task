@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use PDO;
+use PDOException;
 
 class Character
 {
@@ -244,6 +245,30 @@ class Character
 
         $stmt = $this->pdo->prepare('DELETE FROM characters WHERE id = :id');
         return $stmt->execute(['id' => $this->id]);
+    }
+
+    /**
+     *  Busca el personaje por su id
+     *
+     * @param int $id
+     * @return self|null
+     */
+    public function findById(int $id): ?self {
+        try {
+            $sql = "SELECT * FROM characters WHERE id = :id";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([':id' => $id]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$data) {
+                return null;
+            }
+
+            return $this->fromArray($data, $this->pdo);
+
+        } catch (PDOException $e) {
+            throw new PDOException("Error al buscar el personaje: " . $e->getMessage());
+        }
     }
 
 }

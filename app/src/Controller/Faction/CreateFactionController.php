@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Faction;
 
 use PDO;
-use App\Model\Equipment;
+use App\Model\Faction;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class CreateEquipmentController {
+class CreateFactionController {
 
     public function __construct(private PDO $pdo) 
     { 
@@ -18,7 +18,7 @@ class CreateEquipmentController {
         $data = $request->getParsedBody();
 
         # Validamos los campos requeridos
-        $requiredFields = ['name', 'type', 'made_by'];
+        $requiredFields = ['faction_name', 'description'];
 
         foreach ($requiredFields as $field) {
             if (!isset($data[$field]) || empty($data[$field])) {
@@ -30,30 +30,29 @@ class CreateEquipmentController {
         }
         
         try {
-            # Creamos una nueva instancia de Equipment
-            $equipment = new Equipment($this->pdo);
-            $equipment->setName($data['name'])
-                     ->setType($data['type'])
-                     ->setMadeBy($data['made_by']);
+            # Creamos una nueva instancia de Faction
+            $faction = new Faction($this->pdo);
+            $faction->setName($data['faction_name'])
+                   ->setDescription($data['description']);
             
-            # Guardamos el equipamiento en la base de datos
-            $result = $equipment->save();
+            # Guardamos la facción en la base de datos
+            $result = $faction->save();
             
             if (!$result) {
-                throw new \Exception('Error al guardar el equipamiento');
+                throw new \Exception('Error al guardar la facción');
             }
             
-            # Devolvemos una respuesta de éxito
+            # Devolvemos una respuesta de éxito usando toArray
             $response->getBody()->write(json_encode([
-                'id' => $equipment->getId(),
-                'message' => 'El equipamiento se ha creado correctamente'
+                'id' => $faction->getId(),
+                'message' => 'La facción se ha creado correctamente'
             ]));
             
             return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
             
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
-                'error' => 'Error al crear el equipamiento',
+                'error' => 'Error al crear la facción',
                 'message' => $e->getMessage()
             ]));
             

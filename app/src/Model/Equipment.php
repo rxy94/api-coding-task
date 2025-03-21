@@ -10,10 +10,9 @@ class Equipment {
     private string $name;
     private string $type;
     private string $made_by;
-    private PDO $pdo;
 
-    public function __construct(PDO $pdo) {
-        $this->pdo = $pdo;
+    public function __construct(private PDO $pdo) 
+    {
     }
 
     # Getters and Setters
@@ -120,12 +119,13 @@ class Equipment {
     /**
      *  Busca el equipamiento por su id
      *
+     * @param int $id
      * @return self|null
      */
-    public static function findById(int $id, PDO $pdo): ?self {
+    public function findById(int $id): ?self {
         try {
             $sql = "SELECT * FROM equipments WHERE id = :id";
-            $stmt = $pdo->prepare($sql);
+            $stmt = $this->pdo->prepare($sql);
             $stmt->execute([':id' => $id]);
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -133,8 +133,7 @@ class Equipment {
                 return null;
             }
 
-            $equipment = new self($pdo);
-            return $equipment->fromArray($data, $pdo);
+            return $this->fromArray($data);
 
         } catch (PDOException $e) {
             throw new PDOException("Error al buscar el equipamiento: " . $e->getMessage());
@@ -146,16 +145,16 @@ class Equipment {
      *
      * @return array
      */
-    public static function findAll(PDO $pdo): array {
+    public function findAll(): array {
         try {
             $sql = "SELECT * FROM equipments";
-            $stmt = $pdo->query($sql);
+            $stmt = $this->pdo->query($sql);
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $equipments = [];
             foreach ($data as $row) {
-                $equipment = new self($pdo);
-                $equipments[] = $equipment->fromArray($row, $pdo);
+                $equipment = new self($this->pdo);
+                $equipments[] = $equipment->fromArray($row);
             }
 
             return $equipments;
@@ -169,17 +168,14 @@ class Equipment {
      *  Convierte un array en un objeto de equipamiento
      *
      * @param array $data
-     * @param PDO $pdo
      * @return self
      */
-    public function fromArray(array $data, PDO $pdo): self {
-        $equipment = new self($pdo);
-        
+    public function fromArray(array $data): self {
         if (isset($data['id'])) {
-            $equipment->setId($data['id']);
+            $this->setId($data['id']);
         }
         
-        return $equipment
+        return $this
             ->setName($data['name'])
             ->setType($data['type'])
             ->setMadeBy($data['made_by']);

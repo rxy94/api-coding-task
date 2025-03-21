@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Character;
 
 use PDO;
 use App\Model\Character;

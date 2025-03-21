@@ -104,14 +104,12 @@ class Faction {
      * Busca una facción por su ID
      *
      * @param integer $id
-     * @param PDO $pdo
      * @return self|null
      */
-    public static function findById(int $id, PDO $pdo): ?self {
+    public function findById(int $id): ?self {
         try {
-
             $sql = "SELECT * FROM factions WHERE id = :id";
-            $stmt = $pdo->prepare($sql);
+            $stmt = $this->pdo->prepare($sql);
             $stmt->execute([':id' => $id]);
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -119,39 +117,34 @@ class Faction {
                 return null;
             }
 
-            $faction = new self($pdo);
-            return $faction->fromArray($data, $pdo);
+            return $this->fromArray($data);
             
         } catch (PDOException $e) {
             throw new PDOException("Error al buscar la facción: " . $e->getMessage());
-
         }
     }
 
     /**
      * Busca todas las facciones
      *
-     * @param PDO $pdo
      * @return array
      */
-    public static function findAll(PDO $pdo): array {
+    public function findAll(): array {
         try {
-
             $sql = "SELECT * FROM factions";
-            $stmt = $pdo->query($sql);
+            $stmt = $this->pdo->query($sql);
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $factions = [];
             foreach ($data as $row) {
-                $faction = new self($pdo);
-                $factions[] = $faction->fromArray($row, $pdo);
+                $faction = new self($this->pdo);
+                $factions[] = $faction->fromArray($row);
             }
 
             return $factions;
 
         } catch (PDOException $e) {
             throw new PDOException("Error al buscar las facciones: " . $e->getMessage());
-            
         }
     }
 
@@ -159,20 +152,16 @@ class Faction {
      * Crea una facción a partir de un array
      *
      * @param array $data
-     * @param PDO $pdo
      * @return self
      */
-    public function fromArray(array $data, PDO $pdo): self {
-        $faction = new self($pdo);
-        
+    public function fromArray(array $data): self {
         if (isset($data['id'])) {
-            $faction->setId($data['id']);
+            $this->setId($data['id']);
         }
         
-        return $faction
+        return $this
             ->setName($data['faction_name'])
             ->setDescription($data['description']);
-
     }
 
     /**

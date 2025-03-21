@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Character;
 
 use PDO;
 use App\Model\Character;
@@ -18,7 +18,29 @@ class ReadCharactersController {
             # Creamos una instancia del modelo Character
             $character = new Character($this->pdo);
             
-            # Obtenemos todos los personajes usando el modelo
+            # Si hay un ID en los argumentos, buscamos ese personaje específico
+            if (isset($args['id'])) {
+                $id = (int) $args['id'];
+                $foundCharacter = $character->findById($id);
+                
+                if (!$foundCharacter) {
+                    $response->getBody()->write(json_encode([
+                        'error' => 'Personaje no encontrado',
+                        'message' => "No existe un personaje con el ID {$id}"
+                    ]));
+                    
+                    return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+                }
+                
+                $response->getBody()->write(json_encode([
+                    'data' => $foundCharacter->toArray(),
+                    'message' => 'Personaje encontrado correctamente'
+                ]));
+                
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+            }
+            
+            # Si no hay ID, obtenemos todos los personajes
             $characters = $character->findAll();
             
             # Convertimos los objetos Character a arrays
@@ -38,7 +60,6 @@ class ReadCharactersController {
             $response->getBody()->write(json_encode([
                 'error' => 'Error al obtener los personajes',
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
             ]));
             
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
