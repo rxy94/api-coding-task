@@ -40,6 +40,7 @@ class CreateFactionController
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+            
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'error' => 'Error al crear la facción',

@@ -4,34 +4,34 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Container\ContainerInterface;
 use Slim\Factory\AppFactory;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 
 use App\Character\Domain\CharacterRepository;
-use App\Character\Domain\Service\CharacterValidator;
 use App\Character\Domain\Exception\CharacterValidationException;
 use App\Character\Application\CreateCharacterUseCase;
 use App\Character\Application\ValidateCharacterUseCase;
-use App\Character\Infrastructure\Http\CreateCharacterController;
 use App\Character\Infrastructure\MySQLCharacterRepository;
+use App\Character\Infrastructure\Http\CreateCharacterController;
 use App\Character\Infrastructure\Exception\CharacterValidationErrorHandler;
 use App\Controller\Character\ReadCharactersController; 
 
-use App\Controller\Equipment\CreateEquipmentController;
-use App\Controller\Equipment\ReadEquipmetsController;
-
+use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\Exception\FactionValidationException;
-use App\Faction\Infrastructure\Exception\FactionValidationErrorHandler;
-use App\Faction\Infrastructure\Http\CreateFactionController;
-use App\Faction\Infrastructure\MySQLFactionRepository;
-use App\Faction\Domain\Service\FactionValidator;
 use App\Faction\Application\CreateFactionUseCase;
 use App\Faction\Application\ValidateFactionUseCase;
+use App\Faction\Infrastructure\MySQLFactionRepository;
+use App\Faction\Infrastructure\Http\CreateFactionController;
+use App\Faction\Infrastructure\Exception\FactionValidationErrorHandler;
 use App\Controller\Faction\ReadFactionsController;
-use App\Faction\Domain\FactionRepository;
-use Psr\Container\ContainerInterface;
 
+use App\Equipment\Domain\EquipmentRepository;
+use App\Equipment\Application\CreateEquipmentUseCase;
+use App\Equipment\Infrastructure\MySQLEquipmentRepository;
+use App\Equipment\Infrastructure\Http\CreateEquipmentController;
+use App\Controller\Equipment\ReadEquipmetsController;
 
 # Creamos el contenedor de dependencias
 $containerBuilder = new ContainerBuilder();
@@ -68,14 +68,6 @@ $containerBuilder->addDefinitions([
             $c->get(PDO::class)
         );
     },
-    CharacterValidator::class => function () {
-        return new CharacterValidator();
-    },
-    ValidateCharacterUseCase::class => function (ContainerInterface $c) {
-        return new ValidateCharacterUseCase(
-            $c->get(CharacterValidator::class)
-        );
-    },
     CreateCharacterUseCase::class => function (ContainerInterface $c) {
         return new CreateCharacterUseCase(
             $c->get(CharacterRepository::class),
@@ -87,18 +79,20 @@ $containerBuilder->addDefinitions([
             $c->get(PDO::class)
         );
     },
-    FactionValidator::class => function () {
-        return new FactionValidator();
-    },
     CreateFactionUseCase::class => function (ContainerInterface $c) {
         return new CreateFactionUseCase(
             $c->get(FactionRepository::class),
-            $c->get(FactionValidator::class)  
+            $c->get(ValidateFactionUseCase::class)  
         );
     },
-    ValidateFactionUseCase::class => function (ContainerInterface $c) {
-        return new ValidateFactionUseCase(
-            $c->get(FactionValidator::class)
+    EquipmentRepository::class => function (ContainerInterface $c) {
+        return new MySQLEquipmentRepository(
+            $c->get(PDO::class)
+        );
+    },
+    CreateEquipmentUseCase::class => function (ContainerInterface $c) {
+        return new CreateEquipmentUseCase(
+            $c->get(EquipmentRepository::class)
         );
     },
 ]);
@@ -137,7 +131,7 @@ $app->get('/factionsList', ReadFactionsController::class);
 
 # Rutas para equipamientos
 $app->post('/equipments', CreateEquipmentController::class);
-$app->get('/equipments[/{id}]', ReadEquipmetsController::class);
+$app->get('/equipmentsList', ReadEquipmetsController::class);
 
 # Manejamos las rutas no encontradas
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Response $response) {

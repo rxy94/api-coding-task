@@ -8,6 +8,7 @@ use App\Faction\Domain\FactionRepository;
 class CreateFactionUseCase {
     public function __construct(
         private FactionRepository $repository,
+        private ValidateFactionUseCase $validator
     ) {
     }
 
@@ -16,7 +17,8 @@ class CreateFactionUseCase {
         string $description
     ): Faction {
         
-        //TODO: Validar datos
+        # Validamos datos
+        $this->validator->execute($faction_name, $description);
 
         $faction = new Faction();
         $faction->setName($faction_name);
