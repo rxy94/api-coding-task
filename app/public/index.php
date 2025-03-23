@@ -12,8 +12,10 @@ use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Service\CharacterValidator;
 use App\Character\Domain\Exception\CharacterValidationException;
 use App\Character\Application\CreateCharacterUseCase;
+use App\Character\Application\ValidateCharacterUseCase;
 use App\Character\Infrastructure\Http\CreateCharacterController;
 use App\Character\Infrastructure\MySQLCharacterRepository;
+use App\Character\Infrastructure\Exception\CharacterValidationErrorHandler;
 
 use App\Controller\Character\ReadCharactersController; 
 
@@ -63,10 +65,15 @@ $containerBuilder->addDefinitions([
     CharacterValidator::class => function () {
         return new CharacterValidator();
     },
+    ValidateCharacterUseCase::class => function (ContainerInterface $c) {
+        return new ValidateCharacterUseCase(
+            $c->get(CharacterValidator::class)
+        );
+    },
     CreateCharacterUseCase::class => function (ContainerInterface $c) {
         return new CreateCharacterUseCase(
             $c->get(CharacterRepository::class),
-            $c->get(CharacterValidator::class)
+            $c->get(ValidateCharacterUseCase::class)
         );
     },
 ]);
@@ -82,28 +89,13 @@ $app->addErrorMiddleware(true, true, true)
     ->setErrorHandler(CharacterValidationException::class, function (
         Throwable $exception,
     ) use ($app) {
-        $response = $app->getResponseFactory()->createResponse();
-
-        // Comprobación explícita del tipo
-        if ($exception instanceof CharacterValidationException) {
-            $response->getBody()->write(json_encode([
-                'error' => 'Error de validación',
-                'messages' => $exception->getErrors()
-            ]));
-        } else {
-            $response->getBody()->write(json_encode([
-                'error' => 'Error desconocido',
-            ]));
-        }
-        
-        return $response
-            ->withHeader('Content-Type', 'application/json')
-            ->withStatus(400);
+        $handler = new CharacterValidationErrorHandler($app);
+        return $handler->handle($exception);
     });
 
 # Rutas para personajes
 $app->post('/characters', CreateCharacterController::class);
-$app->get('/characters[/{id}]', ReadCharactersController::class);
+$app->get('/charactersList', ReadCharactersController::class);
 
 # Rutas para facciones
 $app->post('/factions', CreateFactionController::class);

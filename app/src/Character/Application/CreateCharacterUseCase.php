@@ -4,13 +4,12 @@ namespace App\Character\Application;
 
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
-use App\Character\Domain\Service\CharacterValidator;
 
 class CreateCharacterUseCase
 {
     public function __construct(
         private CharacterRepository $repository,
-        private CharacterValidator $validator
+        private ValidateCharacterUseCase $validator
     ) {
     }
 
@@ -21,14 +20,9 @@ class CreateCharacterUseCase
         int $equipmentId,
         int $factionId,
     ): Character {
-        // Validar datos
-        $this->validator->validate([
-            'name' => $name,
-            'birth_date' => $birthDate,
-            'kingdom' => $kingdom,
-            'equipment_id' => $equipmentId,
-            'faction_id' => $factionId,
-        ]);
+        
+        # Validamos datos
+        $this->validator->execute($name, $birthDate, $kingdom, $equipmentId, $factionId);
         
         $character = new Character();
         $character->setName($name);
