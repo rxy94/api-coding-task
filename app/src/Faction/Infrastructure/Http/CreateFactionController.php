@@ -16,7 +16,7 @@ class CreateFactionController
     {
         $data = $request->getParsedBody();
         
-        // Validate required fields
+        // Validamos los campos requeridos
         $requiredFields = ['faction_name', 'description'];
         foreach ($requiredFields as $field) {
             if (!isset($data[$field]) || empty($data[$field])) {
@@ -33,7 +33,7 @@ class CreateFactionController
                 $data['description']
             );
 
-            // Return success response
+            // Devolvemos una respuesta de éxito
             $response->getBody()->write(json_encode([
                 'id' => $faction->getId(),
                 'message' => 'La facción se ha creado correctamente'

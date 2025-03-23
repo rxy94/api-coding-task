@@ -16,16 +16,20 @@ use App\Character\Application\ValidateCharacterUseCase;
 use App\Character\Infrastructure\Http\CreateCharacterController;
 use App\Character\Infrastructure\MySQLCharacterRepository;
 use App\Character\Infrastructure\Exception\CharacterValidationErrorHandler;
-
 use App\Controller\Character\ReadCharactersController; 
 
 use App\Controller\Equipment\CreateEquipmentController;
 use App\Controller\Equipment\ReadEquipmetsController;
 
-use App\Controller\Faction\CreateFactionController;
-use App\Controller\Faction\ReadFactionsController;
 use App\Faction\Domain\Exception\FactionValidationException;
 use App\Faction\Infrastructure\Exception\FactionValidationErrorHandler;
+use App\Faction\Infrastructure\Http\CreateFactionController;
+use App\Faction\Infrastructure\MySQLFactionRepository;
+use App\Faction\Domain\Service\FactionValidator;
+use App\Faction\Application\CreateFactionUseCase;
+use App\Faction\Application\ValidateFactionUseCase;
+use App\Controller\Faction\ReadFactionsController;
+use App\Faction\Domain\FactionRepository;
 use Psr\Container\ContainerInterface;
 
 
@@ -76,6 +80,25 @@ $containerBuilder->addDefinitions([
         return new CreateCharacterUseCase(
             $c->get(CharacterRepository::class),
             $c->get(ValidateCharacterUseCase::class)
+        );
+    },
+    FactionRepository::class => function (ContainerInterface $c) {
+        return new MySQLFactionRepository(
+            $c->get(PDO::class)
+        );
+    },
+    FactionValidator::class => function () {
+        return new FactionValidator();
+    },
+    CreateFactionUseCase::class => function (ContainerInterface $c) {
+        return new CreateFactionUseCase(
+            $c->get(FactionRepository::class),
+            $c->get(FactionValidator::class)  
+        );
+    },
+    ValidateFactionUseCase::class => function (ContainerInterface $c) {
+        return new ValidateFactionUseCase(
+            $c->get(FactionValidator::class)
         );
     },
 ]);

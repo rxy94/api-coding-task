@@ -36,7 +36,7 @@ class CreateCharacterController
                 $data['faction_id']
             );
             
-            // Devolvemos una respuesta de éxito
+            // Return success response
             $response->getBody()->write(json_encode([
                 'id' => $character->getId(),
                 'message' => 'El personaje se ha creado correctamente'
