@@ -24,6 +24,8 @@ use App\Controller\Equipment\ReadEquipmetsController;
 
 use App\Controller\Faction\CreateFactionController;
 use App\Controller\Faction\ReadFactionsController;
+use App\Faction\Domain\Exception\FactionValidationException;
+use App\Faction\Infrastructure\Exception\FactionValidationErrorHandler;
 use Psr\Container\ContainerInterface;
 
 
@@ -84,12 +86,21 @@ $container = $containerBuilder->build();
 # Creamos la aplicación con el contenedor
 $app = AppFactory::createFromContainer($container);
 
-# Middleware para manejar excepciones. Captura las excepciones de validación de personajes.
+# Middleware para capturar las excepciones de validación de personajes.
 $app->addErrorMiddleware(true, true, true)
     ->setErrorHandler(CharacterValidationException::class, function (
         Throwable $exception,
     ) use ($app) {
         $handler = new CharacterValidationErrorHandler($app);
+        return $handler->handle($exception);
+    });
+
+# Middleware para capturar las excepciones de validación de facciones.
+$app->addErrorMiddleware(true, true, true)
+    ->setErrorHandler(FactionValidationException::class, function (
+        Throwable $exception,
+    ) use ($app) {
+        $handler = new FactionValidationErrorHandler($app);
         return $handler->handle($exception);
     });
 
@@ -99,7 +110,7 @@ $app->get('/charactersList', ReadCharactersController::class);
 
 # Rutas para facciones
 $app->post('/factions', CreateFactionController::class);
-$app->get('/factions[/{id}]', ReadFactionsController::class);
+$app->get('/factionsList', ReadFactionsController::class);
 
 # Rutas para equipamientos
 $app->post('/equipments', CreateEquipmentController::class);
