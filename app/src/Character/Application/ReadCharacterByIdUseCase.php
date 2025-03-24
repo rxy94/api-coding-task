@@ -2,19 +2,18 @@
 
 namespace App\Character\Application;
 
+use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 
-class ReadCharacterUseCase {
+class ReadCharacterByIdUseCase {
 
     public function __construct(private CharacterRepository $repository)
     {
     }
 
-    public function execute(): array
+    public function execute(int $id): Character
     {
-        $characters = $this->repository->findAll();
-        //var_dump($characters);
-        return $characters;
+        return $this->repository->find($id);
     }
 
 }

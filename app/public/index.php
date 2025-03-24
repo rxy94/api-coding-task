@@ -13,10 +13,12 @@ use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterValidationException;
 use App\Character\Application\ReadCharacterUseCase;
 use App\Character\Application\CreateCharacterUseCase;
+use App\Character\Application\ReadCharacterByIdUseCase;
 use App\Character\Application\ValidateCharacterUseCase;
 use App\Character\Infrastructure\MySQLCharacterRepository;
 use App\Character\Infrastructure\Http\CreateCharacterController;
 use App\Character\Infrastructure\Exception\CharacterValidationErrorHandler;
+use App\Character\Infrastructure\Http\ReadCharacterByIdController;
 use App\Character\Infrastructure\Http\ReadCharacterController;
 
 use App\Faction\Domain\FactionRepository;
@@ -80,6 +82,11 @@ $containerBuilder->addDefinitions([
             $c->get(CharacterRepository::class)
         );
     },
+    ReadCharacterByIdUseCase::class => function (ContainerInterface $c) {
+        return new ReadCharacterByIdUseCase(
+            $c->get(CharacterRepository::class)
+        );
+    },
     FactionRepository::class => function (ContainerInterface $c) {
         return new MySQLFactionRepository(
             $c->get(PDO::class)
@@ -130,6 +137,7 @@ $app->addErrorMiddleware(true, true, true)
 # Rutas para personajes
 $app->post('/characters', CreateCharacterController::class);
 $app->get('/charactersList', ReadCharacterController::class);
+$app->get('/characters/{id}', ReadCharacterByIdController::class);
 
 # Rutas para facciones
 $app->post('/factions', CreateFactionController::class);
