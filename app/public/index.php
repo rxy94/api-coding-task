@@ -11,12 +11,13 @@ use Dotenv\Dotenv;
 
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterValidationException;
+use App\Character\Application\ReadCharacterUseCase;
 use App\Character\Application\CreateCharacterUseCase;
 use App\Character\Application\ValidateCharacterUseCase;
 use App\Character\Infrastructure\MySQLCharacterRepository;
 use App\Character\Infrastructure\Http\CreateCharacterController;
 use App\Character\Infrastructure\Exception\CharacterValidationErrorHandler;
-use App\Controller\Character\ReadCharactersController; 
+use App\Character\Infrastructure\Http\ReadCharacterController;
 
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\Exception\FactionValidationException;
@@ -74,6 +75,11 @@ $containerBuilder->addDefinitions([
             $c->get(ValidateCharacterUseCase::class)
         );
     },
+    ReadCharacterUseCase::class => function (ContainerInterface $c) {
+        return new ReadCharacterUseCase(
+            $c->get(CharacterRepository::class)
+        );
+    },
     FactionRepository::class => function (ContainerInterface $c) {
         return new MySQLFactionRepository(
             $c->get(PDO::class)
@@ -123,7 +129,7 @@ $app->addErrorMiddleware(true, true, true)
 
 # Rutas para personajes
 $app->post('/characters', CreateCharacterController::class);
-$app->get('/charactersList', ReadCharactersController::class);
+$app->get('/charactersList', ReadCharacterController::class);
 
 # Rutas para facciones
 $app->post('/factions', CreateFactionController::class);

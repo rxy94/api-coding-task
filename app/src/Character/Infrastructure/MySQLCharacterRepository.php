@@ -22,7 +22,7 @@ class MySQLCharacterRepository implements CharacterRepository
             return null;
         }
 
-        return self::fromArray($data, $this->pdo);
+        return $this->fromArray($data);
     }
 
     private function fromArray(array $data): Character
@@ -39,18 +39,29 @@ class MySQLCharacterRepository implements CharacterRepository
             ->setKingdom($data['kingdom'])
             ->setEquipmentId($data['equipment_id'])
             ->setFactionId($data['faction_id']);
+            
     }
 
     public function findAll(): array
     {
-        $stmt = $this->pdo->query('SELECT * FROM characters');
-        $characters = [];
+        try {
+            $stmt = $this->pdo->prepare('SELECT * FROM characters');
+            $stmt->execute();
+            $characters = [];
 
-        while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $characters[] = self::fromArray($data);
+            while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $character = $this->fromArray($data);
+                $characters[] = $character;
+            }
+
+            //var_dump($characters);
+
+            return $characters;
+
+        } catch (\PDOException $e) {
+            throw new \PDOException("Error al obtener los personajes: " . $e->getMessage());
+
         }
-
-        return $characters;
     }
 
     public function save(Character $character): Character

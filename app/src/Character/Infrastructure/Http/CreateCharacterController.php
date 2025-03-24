@@ -16,7 +16,7 @@ class CreateCharacterController
     {
         $data = $request->getParsedBody();
 
-        // Validamos los campos requeridos
+        # Validamos los campos requeridos
         $requiredFields = ['name', 'birth_date', 'kingdom', 'equipment_id', 'faction_id'];
         foreach ($requiredFields as $field) {
             if (!isset($data[$field]) || empty($data[$field])) {
@@ -36,7 +36,7 @@ class CreateCharacterController
                 $data['faction_id']
             );
             
-            // Return success response
+            # Devolvemos el personaje creado
             $response->getBody()->write(json_encode([
                 'id' => $character->getId(),
                 'message' => 'El personaje se ha creado correctamente'
