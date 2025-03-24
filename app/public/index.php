@@ -26,15 +26,18 @@ use App\Faction\Domain\Exception\FactionValidationException;
 use App\Faction\Application\CreateFactionUseCase;
 use App\Faction\Application\ValidateFactionUseCase;
 use App\Faction\Infrastructure\MySQLFactionRepository;
+use App\Faction\Infrastructure\Http\ReadFactionController;
 use App\Faction\Infrastructure\Http\CreateFactionController;
 use App\Faction\Infrastructure\Exception\FactionValidationErrorHandler;
-use App\Controller\Faction\ReadFactionsController;
 
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Application\CreateEquipmentUseCase;
 use App\Equipment\Infrastructure\MySQLEquipmentRepository;
 use App\Equipment\Infrastructure\Http\CreateEquipmentController;
 use App\Controller\Equipment\ReadEquipmetsController;
+use App\Faction\Application\ReadFactionByIdUseCase;
+use App\Faction\Application\ReadFactionUseCase;
+use App\Faction\Infrastructure\Http\ReadFactionByIdController;
 
 # Creamos el contenedor de dependencias
 $containerBuilder = new ContainerBuilder();
@@ -92,6 +95,16 @@ $containerBuilder->addDefinitions([
             $c->get(PDO::class)
         );
     },
+    ReadFactionUseCase::class => function (ContainerInterface $c) {
+        return new ReadFactionUseCase(
+            $c->get(FactionRepository::class)
+        );
+    },
+    ReadFactionByIdUseCase::class => function (ContainerInterface $c) {
+        return new ReadFactionByIdUseCase(
+            $c->get(FactionRepository::class)
+        );
+    },
     CreateFactionUseCase::class => function (ContainerInterface $c) {
         return new CreateFactionUseCase(
             $c->get(FactionRepository::class),
@@ -141,7 +154,8 @@ $app->get('/characters/{id}', ReadCharacterByIdController::class);
 
 # Rutas para facciones
 $app->post('/factions', CreateFactionController::class);
-$app->get('/factionsList', ReadFactionsController::class);
+$app->get('/factionsList', ReadFactionController::class);
+$app->get('/factions/{id}', ReadFactionByIdController::class);
 
 # Rutas para equipamientos
 $app->post('/equipments', CreateEquipmentController::class);
