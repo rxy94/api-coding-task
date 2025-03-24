@@ -26,6 +26,7 @@
     "allow-plugins": true
   },
   "require-dev": {
-    "apigen/apigen": "^4.1"
+    "apigen/apigen": "^4.1",
+    "symfony/var-dumper": "^3.4"
   }
 }

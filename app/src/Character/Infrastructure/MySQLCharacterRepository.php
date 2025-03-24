@@ -27,18 +27,16 @@ class MySQLCharacterRepository implements CharacterRepository
 
     private function fromArray(array $data): Character
     {
-        $character = new Character();
-        
-        if (isset($data['id'])) {
-            $character->setId($data['id']);
-        }
-        
-        return $character
-            ->setName($data['name'])
-            ->setBirthDate($data['birth_date'])
-            ->setKingdom($data['kingdom'])
-            ->setEquipmentId($data['equipment_id'])
-            ->setFactionId($data['faction_id']);
+        $character = new Character(
+            $data['name'],
+            $data['birth_date'],
+            $data['kingdom'],
+            $data['equipment_id'],
+            $data['faction_id'],
+            $data['id']
+        );
+
+        return $character;
             
     }
 
@@ -66,11 +64,11 @@ class MySQLCharacterRepository implements CharacterRepository
 
     public function save(Character $character): Character
     {
-        if (isset($this->id)) {
-            return $this->update($character);
+        if ($character->getId() === null) {
+            return $this->insert($character);
         }
 
-        return $this->insert($character);
+        return $this->update($character);
     }
 
     private function insert(Character $character): Character
@@ -88,10 +86,18 @@ class MySQLCharacterRepository implements CharacterRepository
         ]);
 
         if ($result) {
-            $character->setId((int) $this->pdo->lastInsertId());
+            $id = (int) $this->pdo->lastInsertId();
+            return new Character(
+                $character->getName(),
+                $character->getBirthDate(),
+                $character->getKingdom(),
+                $character->getEquipmentId(),
+                $character->getFactionId(),
+                $id
+            );
         }
 
-        return $character;
+        throw new \RuntimeException('Error al insertar el personaje');
     }
 
     private function update(Character $character): Character

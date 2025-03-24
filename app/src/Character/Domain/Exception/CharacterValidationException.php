@@ -4,12 +4,17 @@ namespace App\Character\Domain\Exception;
 
 class CharacterValidationException extends \DomainException
 {
-    private array $errors;
+    private const MESSAGE = "Error de validación del personaje";
 
-    public function __construct(array $errors)
+    private function __construct(private array $errors)
     {
-        parent::__construct("Error de validación del personaje");
+        parent::__construct(self::MESSAGE);
         $this->errors = $errors;
+    }
+
+    public static function fromErrors(array $errors): self
+    {
+        return new self($errors);
     }
 
     public function getErrors(): array

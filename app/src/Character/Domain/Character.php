@@ -1,30 +1,24 @@
 <?php
 
 namespace App\Character\Domain;
+use JsonSerializable;
 
-class Character
+class Character implements JsonSerializable
 {
-    private int $id;
-    private string $name;
-    private string $birth_date;
-    private string $kingdom;
-    private int $equipment_id;
-    private int $faction_id;
-
-    public function __construct()
-    {
+    public function __construct(
+        private string $name,
+        private string $birth_date,
+        private string $kingdom,
+        private int $equipment_id,
+        private int $faction_id,
+        private ?int $id = null
+    ) {
     }
 
     # Getters y setters
-    public function getId(): int
+    public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(int $id): self
-    {
-        $this->id = $id;
-        return $this;
     }
 
     public function getName(): string
@@ -32,21 +26,9 @@ class Character
         return $this->name;
     }
 
-    public function setName(string $name): self
-    {
-        $this->name = $name;
-        return $this;
-    }
-
     public function getBirthDate(): string
     {
         return $this->birth_date;
-    }
-
-    public function setBirthDate(string $birth_date): self
-    {
-        $this->birth_date = $birth_date;
-        return $this;
     }
 
     public function getKingdom(): string
@@ -54,32 +36,14 @@ class Character
         return $this->kingdom;
     }
 
-    public function setKingdom(string $kingdom): self
-    {
-        $this->kingdom = $kingdom;
-        return $this;
-    }
-
     public function getEquipmentId(): int
     {
         return $this->equipment_id;
     }
 
-    public function setEquipmentId(int $equipment_id): self
-    {
-        $this->equipment_id = $equipment_id;
-        return $this;
-    }
-
     public function getFactionId(): int
     {
         return $this->faction_id;
-    }
-
-    public function setFactionId(int $faction_id): self
-    {
-        $this->faction_id = $faction_id;
-        return $this;
     }
 
     /**
@@ -90,18 +54,14 @@ class Character
      */
     public function fromArray(array $data): self
     {
-        $character = new self();
-        
-        if (isset($data['id'])) {
-            $character->setId($data['id']);
-        }
-        
-        return $character
-            ->setName($data['name'])
-            ->setBirthDate($data['birth_date'])
-            ->setKingdom($data['kingdom'])
-            ->setEquipmentId($data['equipment_id'])
-            ->setFactionId($data['faction_id']);
+        return new self(
+            $data['name'],
+            $data['birth_date'],
+            $data['kingdom'],
+            $data['equipment_id'],
+            $data['faction_id'],
+            $data['id'] ?? null
+        );
     }
 
     /**
@@ -119,11 +79,21 @@ class Character
             'faction_id' => $this->faction_id
         ];
 
-        if (isset($this->id)) {
+        if ($this->id !== null) {
             $data['id'] = $this->id;
         }
 
         return $data;
     }
+
+    /**
+     * Convierte el personaje a un array para serializar
+     *
+     * @return array
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
+    }  
 
 }

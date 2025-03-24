@@ -21,7 +21,7 @@ class CreateCharacterController
         foreach ($requiredFields as $field) {
             if (!isset($data[$field]) || empty($data[$field])) {
                 $response->getBody()->write(json_encode([
-                    'error' => "Missing required field: {$field}"
+                    'error' => "Campo requerido: {$field}"
                 ]));
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }

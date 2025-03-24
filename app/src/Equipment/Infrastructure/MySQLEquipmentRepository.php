@@ -48,6 +48,8 @@ class MySQLEquipmentRepository implements EquipmentRepository
             $equipments[] = self::fromArray($data);
         }
 
+        var_dump($equipments);
+
         return $equipments;
     }
 

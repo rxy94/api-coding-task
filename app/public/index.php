@@ -12,32 +12,32 @@ use Dotenv\Dotenv;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterValidationException;
 use App\Character\Application\ReadCharacterUseCase;
-use App\Character\Application\CreateCharacterUseCase;
 use App\Character\Application\ReadCharacterByIdUseCase;
-use App\Character\Application\ValidateCharacterUseCase;
+use App\Character\Application\CreateCharacterUseCase;
+use App\Character\Domain\Service\CharacterValidator;
 use App\Character\Infrastructure\MySQLCharacterRepository;
 use App\Character\Infrastructure\Http\CreateCharacterController;
-use App\Character\Infrastructure\Exception\CharacterValidationErrorHandler;
 use App\Character\Infrastructure\Http\ReadCharacterByIdController;
 use App\Character\Infrastructure\Http\ReadCharacterController;
 
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\Exception\FactionValidationException;
+use App\Faction\Application\ReadFactionUseCase;
+use App\Faction\Application\ReadFactionByIdUseCase;
 use App\Faction\Application\CreateFactionUseCase;
 use App\Faction\Application\ValidateFactionUseCase;
 use App\Faction\Infrastructure\MySQLFactionRepository;
 use App\Faction\Infrastructure\Http\ReadFactionController;
 use App\Faction\Infrastructure\Http\CreateFactionController;
-use App\Faction\Infrastructure\Exception\FactionValidationErrorHandler;
+use App\Faction\Infrastructure\Http\ReadFactionByIdController;
 
 use App\Equipment\Domain\EquipmentRepository;
+use App\Equipment\Application\ReadEquipmentUseCase;
 use App\Equipment\Application\CreateEquipmentUseCase;
 use App\Equipment\Infrastructure\MySQLEquipmentRepository;
 use App\Equipment\Infrastructure\Http\CreateEquipmentController;
-use App\Controller\Equipment\ReadEquipmetsController;
-use App\Faction\Application\ReadFactionByIdUseCase;
-use App\Faction\Application\ReadFactionUseCase;
-use App\Faction\Infrastructure\Http\ReadFactionByIdController;
+use App\Equipment\Infrastructure\Http\ReadEquipmentController;
+use App\Shared\Infrastructure\Exception\ValidationErrorHandler;
 
 # Creamos el contenedor de dependencias
 $containerBuilder = new ContainerBuilder();
@@ -77,7 +77,7 @@ $containerBuilder->addDefinitions([
     CreateCharacterUseCase::class => function (ContainerInterface $c) {
         return new CreateCharacterUseCase(
             $c->get(CharacterRepository::class),
-            $c->get(ValidateCharacterUseCase::class)
+            $c->get(CharacterValidator::class)
         );
     },
     ReadCharacterUseCase::class => function (ContainerInterface $c) {
@@ -121,6 +121,11 @@ $containerBuilder->addDefinitions([
             $c->get(EquipmentRepository::class)
         );
     },
+    ReadEquipmentUseCase::class => function (ContainerInterface $c) {
+        return new ReadEquipmentUseCase(
+            $c->get(EquipmentRepository::class)
+        );
+    },
 ]);
 
 # Creamos el contenedor
@@ -133,18 +138,18 @@ $app = AppFactory::createFromContainer($container);
 $app->addErrorMiddleware(true, true, true)
     ->setErrorHandler(CharacterValidationException::class, function (
         Throwable $exception,
-    ) use ($app) {
-        $handler = new CharacterValidationErrorHandler($app);
-        return $handler->handle($exception);
+    ) {
+        $handler = new ValidationErrorHandler($exception->getMessage());
+        return $handler->fromMessage($exception->getMessage());
     });
 
 # Middleware para capturar las excepciones de validación de facciones.
 $app->addErrorMiddleware(true, true, true)
     ->setErrorHandler(FactionValidationException::class, function (
         Throwable $exception,
-    ) use ($app) {
-        $handler = new FactionValidationErrorHandler($app);
-        return $handler->handle($exception);
+    ) {
+        $handler = new ValidationErrorHandler($exception->getMessage());
+        return $handler->fromMessage($exception->getMessage());
     });
 
 # Rutas para personajes
@@ -159,7 +164,7 @@ $app->get('/factions/{id}', ReadFactionByIdController::class);
 
 # Rutas para equipamientos
 $app->post('/equipments', CreateEquipmentController::class);
-$app->get('/equipmentsList', ReadEquipmetsController::class);
+$app->get('/equipmentsList', ReadEquipmentController::class);
 
 # Manejamos las rutas no encontradas
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Response $response) {

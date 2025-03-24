@@ -6,56 +6,47 @@ use App\Character\Domain\Exception\CharacterValidationException;
 
 class CharacterValidator
 {
-    public function validate(array $data): void
-    {
+    public function validate(
+        string $name,
+        string $birthDate,
+        string $kingdom,
+        int $equipmentId,
+        int $factionId
+    ): void {
         $errors = [];
 
-        // Validar campos requeridos
-        $requiredFields = ['name', 'birth_date', 'kingdom', 'equipment_id', 'faction_id'];
-        foreach ($requiredFields as $field) {
-            if (!isset($data[$field]) || empty($data[$field])) {
-                $errors[] = "El campo {$field} es requerido";
-            }
+        # Validamos los campos requeridos
+        if (empty($name)) {
+            $errors[] = "El nombre es requerido";
+        } elseif (strlen($name) > 100) {
+            $errors[] = "El nombre no puede exceder los 100 caracteres";
         }
 
-        // Validar tipos y formatos
-        if (isset($data['name'])) {
-            if (!is_string($data['name'])) {
-                $errors[] = "El nombre debe ser texto";
-            } elseif (strlen($data['name']) > 100) {
-                $errors[] = "El nombre no puede exceder los 100 caracteres";
-            }
-        }
-
-        if (isset($data['birth_date'])) {
-            $date = \DateTime::createFromFormat('Y-m-d', $data['birth_date']);
-            if (!$date || $date->format('Y-m-d') !== $data['birth_date']) {
+        if (empty($birthDate)) {
+            $errors[] = "La fecha de nacimiento es requerida";
+        } else {
+            $date = \DateTime::createFromFormat('Y-m-d', $birthDate);
+            if (!$date || $date->format('Y-m-d') !== $birthDate) {
                 $errors[] = "La fecha de nacimiento debe tener el formato YYYY-MM-DD";
             }
         }
 
-        if (isset($data['kingdom'])) {
-            if (!is_string($data['kingdom'])) {
-                $errors[] = "El reino debe ser texto";
-            } elseif (strlen($data['kingdom']) > 100) {
-                $errors[] = "El reino no puede exceder los 100 caracteres";
-            }
+        if (empty($kingdom)) {
+            $errors[] = "El reino es requerido";
+        } elseif (strlen($kingdom) > 100) {
+            $errors[] = "El reino no puede exceder los 100 caracteres";
         }
 
-        if (isset($data['equipment_id'])) {
-            if (!is_numeric($data['equipment_id']) || $data['equipment_id'] <= 0) {
-                $errors[] = "El ID del equipamiento debe ser un número positivo";
-            }
+        if ($equipmentId <= 0) {
+            $errors[] = "El ID del equipamiento debe ser un número positivo";
         }
 
-        if (isset($data['faction_id'])) {
-            if (!is_numeric($data['faction_id']) || $data['faction_id'] <= 0) {
-                $errors[] = "El ID de la facción debe ser un número positivo";
-            }
+        if ($factionId <= 0) {
+            $errors[] = "El ID de la facción debe ser un número positivo";
         }
 
         if (!empty($errors)) {
-            throw new CharacterValidationException($errors);
+            throw CharacterValidationException::fromErrors($errors);
         }
     }
 } 
