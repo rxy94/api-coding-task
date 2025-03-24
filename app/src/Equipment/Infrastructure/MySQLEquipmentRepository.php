@@ -42,13 +42,14 @@ class MySQLEquipmentRepository implements EquipmentRepository
     public function findAll(): array
     {
         $stmt = $this->pdo->prepare('SELECT * FROM equipments');
+        $stmt->execute();
         $equipments = [];
 
         while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $equipments[] = self::fromArray($data);
         }
 
-        var_dump($equipments);
+        //var_dump($equipments);
 
         return $equipments;
     }
