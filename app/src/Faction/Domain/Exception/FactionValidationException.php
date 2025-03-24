@@ -2,7 +2,9 @@
 
 namespace App\Faction\Domain\Exception;
 
-class FactionValidationException extends \DomainException
+use App\Shared\Domain\Exception\ValidationExceptionInterface;
+
+class FactionValidationException extends \DomainException implements ValidationExceptionInterface
 {
     private array $errors;
 

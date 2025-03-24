@@ -19,7 +19,7 @@ class FactionValidationErrorHandler
         
         if ($exception instanceof FactionValidationException) {
             $response->getBody()->write(json_encode([
-                'error' => 'Error de validación',
+                'error' => 'Error de validación de la facción',
                 'messages' => $exception->getErrors()
             ]));
         } else {

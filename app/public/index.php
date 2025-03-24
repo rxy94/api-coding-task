@@ -134,22 +134,15 @@ $container = $containerBuilder->build();
 # Creamos la aplicación con el contenedor
 $app = AppFactory::createFromContainer($container);
 
-# Middleware para capturar las excepciones de validación de personajes.
+# Middleware para capturar las excepciones de validación
 $app->addErrorMiddleware(true, true, true)
-    ->setErrorHandler(CharacterValidationException::class, function (
+    ->setErrorHandler([CharacterValidationException::class, FactionValidationException::class], function (
         Throwable $exception,
-    ) {
-        $handler = new ValidationErrorHandler($exception->getMessage());
-        return $handler->fromMessage($exception->getMessage());
-    });
-
-# Middleware para capturar las excepciones de validación de facciones.
-$app->addErrorMiddleware(true, true, true)
-    ->setErrorHandler(FactionValidationException::class, function (
-        Throwable $exception,
-    ) {
-        $handler = new ValidationErrorHandler($exception->getMessage());
-        return $handler->fromMessage($exception->getMessage());
+        Request $request,
+        Response $response
+    ) use ($app) {
+        $handler = new ValidationErrorHandler($app->getResponseFactory());
+        return $handler->handle($exception);
     });
 
 # Rutas para personajes

@@ -3,6 +3,7 @@
 namespace App\Character\Infrastructure\Http;
 
 use App\Character\Application\CreateCharacterUseCase;
+use App\Character\Domain\Exception\CharacterValidationException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -43,6 +44,15 @@ class CreateCharacterController
             ]));
             
             return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+
+        } catch (CharacterValidationException $e) { # Capturamos la excepción de validación específica de personajes
+            $response->getBody()->write(json_encode([
+                'error' => $e->getMessage(),
+                'messages' => $e->getErrors()
+            ]));
+            
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'error' => 'Error al crear el personaje',

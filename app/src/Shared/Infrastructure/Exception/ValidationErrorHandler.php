@@ -2,23 +2,37 @@
 
 namespace App\Shared\Infrastructure\Exception;
 
-use Exception;
+use App\Shared\Domain\Exception\ValidationExceptionInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
+use Throwable;
 
-class ValidationErrorHandler extends Exception
+class ValidationErrorHandler
 {
-    public function __construct(string $message)
+    # Inyectamos la interfaz de Slim ResponseFactoryInterface para crear la respuesta en vez de pasarle el $app entero
+    public function __construct(private ResponseFactoryInterface $responseFactory)
     {
-        parent::__construct($message);
     }
 
-    public static function fromErrors(array $errors): self
+    public function handle(Throwable $exception): ResponseInterface
     {
-        return new self(json_encode($errors));
-    }
+        $response = $this->responseFactory->createResponse();
+        
+        if ($exception instanceof ValidationExceptionInterface) { # Se mostrarán los errores de validación en postman
+            $response->getBody()->write(json_encode([
+                'error' => $exception->getMessage(),
+                'messages' => $exception->getErrors(),
+            ]));
 
-    public static function fromMessage(string $message): self
-    {
-        return new self($message);
-    }
+        } else {
+            $response->getBody()->write(json_encode([
+                'error' => 'Error desconocido',
+            ]));
 
+        }
+        
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus(400);
+    }
 }
