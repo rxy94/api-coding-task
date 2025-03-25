@@ -4,7 +4,7 @@ namespace App\Character\Domain;
 
 interface CharacterRepository {
 
-    public function find(int $id): ?Character;
+    public function findById(int $id): ?Character;
 
     public function findAll(): array;
 

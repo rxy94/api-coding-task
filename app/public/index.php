@@ -37,7 +37,7 @@ use App\Equipment\Application\CreateEquipmentUseCase;
 use App\Equipment\Infrastructure\MySQLEquipmentRepository;
 use App\Equipment\Infrastructure\Http\CreateEquipmentController;
 use App\Equipment\Infrastructure\Http\ReadEquipmentController;
-use App\Shared\Infrastructure\Exception\ValidationErrorHandler;
+use App\Shared\Infrastructure\Exception\ErrorHandler;
 
 # Creamos el contenedor de dependencias
 $containerBuilder = new ContainerBuilder();
@@ -134,16 +134,8 @@ $container = $containerBuilder->build();
 # Creamos la aplicación con el contenedor
 $app = AppFactory::createFromContainer($container);
 
-# Middleware para capturar las excepciones de validación
-$app->addErrorMiddleware(true, true, true)
-    ->setErrorHandler([CharacterValidationException::class, FactionValidationException::class], function (
-        Throwable $exception,
-        Request $request,
-        Response $response
-    ) use ($app) {
-        $handler = new ValidationErrorHandler($app->getResponseFactory());
-        return $handler->handle($exception);
-    });
+# Middleware para manejar excepciones
+$app->addErrorMiddleware(true, true, true);
 
 # Rutas para personajes
 $app->post('/characters', CreateCharacterController::class);

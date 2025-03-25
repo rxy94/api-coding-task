@@ -14,7 +14,8 @@ class MySQLEquipmentRepository implements EquipmentRepository
 
     public function findById(int $id): ?Equipment
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM equipments WHERE id = :id');
+        $sql = 'SELECT * FROM equipments WHERE id = :id';
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -27,31 +28,33 @@ class MySQLEquipmentRepository implements EquipmentRepository
 
     private function fromArray(array $data): Equipment
     {
-        $equipment = new Equipment();
+        $equipment = new Equipment(
+            $data['name'],
+            $data['type'],
+            $data['made_by'],
+            $data['id'] ?? null
+        );
 
-        if (isset($data['id'])) {
-            $equipment->setId($data['id']);
-        }
-
-        return $equipment
-            ->setName($data['name'])
-            ->setType($data['type'])
-            ->setMadeBy($data['made_by']);
+        return $equipment;
     }
 
     public function findAll(): array
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM equipments');
-        $stmt->execute();
-        $equipments = [];
+        try {
+            $sql = 'SELECT * FROM equipments';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            $equipments = [];
 
-        while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $equipments[] = self::fromArray($data);
+            while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $equipments[] = self::fromArray($data);
+            }
+
+            return $equipments;
+
+        } catch (\PDOException $e) {
+            throw new \PDOException("Error al obtener los equipos: " . $e->getMessage());
         }
-
-        //var_dump($equipments);
-
-        return $equipments;
     }
 
     public function save(Equipment $equipment): Equipment
@@ -67,18 +70,25 @@ class MySQLEquipmentRepository implements EquipmentRepository
     {
         $sql = 'INSERT INTO equipments (name, type, made_by)    
                 VALUES (:name, :type, :made_by)';
+
         $stmt = $this->pdo->prepare($sql);
         $result = $stmt->execute([
-            'name' => $equipment->getName(),
-            'type' => $equipment->getType(),
+            'name'    => $equipment->getName(),
+            'type'    => $equipment->getType(),
             'made_by' => $equipment->getMadeBy(),
         ]);
 
         if ($result) {
-            $equipment->setId((int) $this->pdo->lastInsertId());
+            $id = (int) $this->pdo->lastInsertId();
+            return new Equipment(
+                $equipment->getName(),
+                $equipment->getType(),
+                $equipment->getMadeBy(),
+                $id
+            );
         }
 
-        return $equipment;
+        throw new \RuntimeException('Error al insertar el equipo');
     }
 
     private function update(Equipment $equipment): Equipment
@@ -88,17 +98,14 @@ class MySQLEquipmentRepository implements EquipmentRepository
                     type = :type, 
                     made_by = :made_by 
                 WHERE id = :id';
-        $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute([
-            'name' => $equipment->getName(),
-            'type' => $equipment->getType(),
-            'made_by' => $equipment->getMadeBy(),
-            'id' => $equipment->getId(),
-        ]);
 
-        if ($result) {
-            $equipment->setId((int) $this->pdo->lastInsertId());
-        }
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'id'      => $equipment->getId(),
+            'name'    => $equipment->getName(),
+            'type'    => $equipment->getType(),
+            'made_by' => $equipment->getMadeBy(),
+        ]);
 
         return $equipment;
     }
@@ -109,7 +116,8 @@ class MySQLEquipmentRepository implements EquipmentRepository
             return false;
         }
 
-        $stmt = $this->pdo->prepare('DELETE FROM equipments WHERE id = :id');
+        $sql = 'DELETE FROM equipments WHERE id = :id';
+        $stmt = $this->pdo->prepare($sql);
         return $stmt->execute(['id' => $equipment->getId()]);
     }
     

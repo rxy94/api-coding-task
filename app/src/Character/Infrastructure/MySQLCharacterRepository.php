@@ -12,9 +12,10 @@ class MySQLCharacterRepository implements CharacterRepository
     {
     }
 
-    public function find(int $id): ?Character
+    public function findById(int $id): ?Character
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM characters WHERE id = :id');
+        $sql = 'SELECT * FROM characters WHERE id = :id';
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -33,7 +34,7 @@ class MySQLCharacterRepository implements CharacterRepository
             $data['kingdom'],
             $data['equipment_id'],
             $data['faction_id'],
-            $data['id']
+            $data['id'] ?? null
         );
 
         return $character;
@@ -43,12 +44,13 @@ class MySQLCharacterRepository implements CharacterRepository
     public function findAll(): array
     {
         try {
-            $stmt = $this->pdo->prepare('SELECT * FROM characters');
+            $sql = 'SELECT * FROM characters';
+            $stmt = $this->pdo->prepare($sql);
             $stmt->execute();
             $characters = [];
 
             while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $character = $this->fromArray($data);
+                $character = self::fromArray($data);
                 $characters[] = $character;
             }
 
@@ -78,11 +80,11 @@ class MySQLCharacterRepository implements CharacterRepository
         
         $stmt = $this->pdo->prepare($sql);
         $result = $stmt->execute([
-            'name' =>           $character->getName(),
-            'birth_date' =>     $character->getBirthDate(),
-            'kingdom' =>        $character->getKingdom(),
-            'equipment_id' =>   $character->getEquipmentId(),
-            'faction_id' =>     $character->getFactionId(),
+            'name'         => $character->getName(),
+            'birth_date'   => $character->getBirthDate(),
+            'kingdom'      => $character->getKingdom(),
+            'equipment_id' => $character->getEquipmentId(),
+            'faction_id'   => $character->getFactionId(),
         ]);
 
         if ($result) {
@@ -112,12 +114,12 @@ class MySQLCharacterRepository implements CharacterRepository
         
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
-            'id' =>             $character->getId(),
-            'name' =>           $character->getName(),
-            'birth_date' =>     $character->getBirthDate(),
-            'kingdom' =>        $character->getKingdom(),
-            'equipment_id' =>   $character->getEquipmentId(),
-            'faction_id' =>     $character->getFactionId(),
+            'id'           => $character->getId(),
+            'name'         => $character->getName(),
+            'birth_date'   => $character->getBirthDate(),
+            'kingdom'      => $character->getKingdom(),
+            'equipment_id' => $character->getEquipmentId(),
+            'faction_id'   => $character->getFactionId(),
         ]);
 
         return $character;
@@ -129,7 +131,8 @@ class MySQLCharacterRepository implements CharacterRepository
             return false;
         }
 
-        $stmt = $this->pdo->prepare('DELETE FROM characters WHERE id = :id');
+        $sql = 'DELETE FROM characters WHERE id = :id';
+        $stmt = $this->pdo->prepare($sql);
         return $stmt->execute(['id' => $character->getId()]);
     }
 

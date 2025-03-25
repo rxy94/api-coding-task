@@ -2,16 +2,23 @@
 
 namespace App\Character\Domain\Exception;
 
-use App\Shared\Domain\Exception\ValidationExceptionInterface;
-
-class CharacterValidationException extends \DomainException implements ValidationExceptionInterface
+class CharacterValidationException extends \DomainException
 {
     private const MESSAGE = "Error de validación del personaje";
-    private array $errors = [];
-
-    private function __construct()
+    private const NAME_ERROR = "El nombre es requerido";
+    private const NAME_LENGTH_ERROR = "El nombre no puede exceder los 100 caracteres";
+    private const BIRTH_DATE_ERROR = "La fecha de nacimiento es requerida";
+    private const BIRTH_DATE_FORMAT_ERROR = "La fecha de nacimiento debe tener el formato YYYY-MM-DD";
+    private const KINGDOM_ERROR = "El reino es requerido";
+    private const KINGDOM_LENGTH_ERROR = "El reino no puede exceder los 100 caracteres";
+    private const EQUIPMENT_ID_ERROR = "El ID del equipamiento debe ser un número positivo";
+    private const EQUIPMENT_ID_TYPE_ERROR = "El ID del equipamiento debe ser un número entero";
+    private const FACTION_ID_ERROR = "El ID de la facción debe ser un número positivo";
+    private const FACTION_ID_TYPE_ERROR = "El ID de la facción debe ser un número entero";
+    
+    private function __construct(string $message = self::MESSAGE)
     {
-        parent::__construct(self::MESSAGE);
+        parent::__construct($message);
     }
 
     public static function builder(): self
@@ -19,58 +26,54 @@ class CharacterValidationException extends \DomainException implements Validatio
         return new self();
     }
 
-    public function withNameError(): self
+    public static function withNameError(): static
     {
-        $this->errors[] = "El nombre es requerido";
-        return $this;
+        return new self(self::NAME_ERROR);
     }
 
-    public function withNameLengthError(): self
+    public static function withNameLengthError(): static
     {
-        $this->errors[] = "El nombre no puede exceder los 100 caracteres";
-        return $this;
+        return new self(self::NAME_LENGTH_ERROR);
     }
 
-    public function withBirthDateError(): self
+    public static function withBirthDateError(): static
     {
-        $this->errors[] = "La fecha de nacimiento es requerida";
-        return $this;
+        return new self(self::BIRTH_DATE_ERROR);
     }
 
-    public function withBirthDateFormatError(): self
+    public static function withBirthDateFormatError(): static
     {
-        $this->errors[] = "La fecha de nacimiento debe tener el formato YYYY-MM-DD";
-        return $this;
+        return new self(self::BIRTH_DATE_FORMAT_ERROR);
     }
 
-    public function withKingdomError(): self
+    public static function withKingdomError(): static
     {
-        $this->errors[] = "El reino es requerido";
-        return $this;
+        return new self(self::KINGDOM_ERROR);
     }
 
-    public function withKingdomLengthError(): self
+    public static function withKingdomLengthError(): static
     {
-        $this->errors[] = "El reino no puede exceder los 100 caracteres";
-        return $this;
+        return new self(self::KINGDOM_LENGTH_ERROR);
     }
 
-    public function withEquipmentIdError(): self
+    public static function withEquipmentIdError(): static
     {
-        $this->errors[] = "El ID del equipamiento debe ser un número positivo";
-        return $this;
+        return new self(self::EQUIPMENT_ID_ERROR);
     }
 
-    public function withFactionIdError(): self
+    public static function withEquipmentIdTypeError(): static
     {
-        $this->errors[] = "El ID de la facción debe ser un número positivo";
-        return $this;
+        return new self(self::EQUIPMENT_ID_TYPE_ERROR);
     }
 
-    public function withCustomError(string $error): self
+    public static function withFactionIdError(): static
     {
-        $this->errors[] = $error;
-        return $this;
+        return new self(self::FACTION_ID_ERROR);
+    }
+
+    public static function withFactionIdTypeError(): static
+    {
+        return new self(self::FACTION_ID_TYPE_ERROR);
     }
 
     public function build(): self
@@ -78,9 +81,4 @@ class CharacterValidationException extends \DomainException implements Validatio
         return $this;
     }
 
-    public function getErrors(): array
-    {
-        //dump($this->errors);
-        return $this->errors;
-    }
 } 

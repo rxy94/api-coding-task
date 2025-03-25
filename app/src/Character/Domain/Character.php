@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Character\Domain;
+
 use JsonSerializable;
 
 class Character implements JsonSerializable
@@ -15,7 +16,7 @@ class Character implements JsonSerializable
     ) {
     }
 
-    # Getters y setters
+    # Getters
     public function getId(): ?int
     {
         return $this->id;

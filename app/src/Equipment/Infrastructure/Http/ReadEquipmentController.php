@@ -15,8 +15,7 @@ class ReadEquipmentController {
     public function __invoke(Request $request, Response $response): Response
     {
         $equipments = $this->readEquipmentUseCase->execute();
-        //var_dump($equipments);
-
+        
         $equipmentsArray = array_map(function($equipment) {
             return $equipment->toArray();
         }, $equipments);    

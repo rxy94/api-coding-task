@@ -2,48 +2,29 @@
 
 namespace App\Equipment\Domain;
 
-class Equipment
+use JsonSerializable;
+
+class Equipment implements JsonSerializable
 {
-    private ?int $id = null;
-    private string $name;
-    private string $type;
-    private string $made_by;
-
-    public function __construct() 
-    {
+    public function __construct(
+        private string $name,
+        private string $type,
+        private string $made_by,
+        private ?int $id = null
+    ) {
     }
 
-     # Getters and Setters
-     public function setId(?int $id): self {
-        $this->id = $id;
-        return $this;
-    }
-
+    # Getters
     public function getId(): ?int {
         return $this->id;
-    }
-
-    public function setName(string $name): self {
-        $this->name = $name;
-        return $this;
     }
 
     public function getName(): string {
         return $this->name;
     }
 
-    public function setType(string $type): self {
-        $this->type = $type;
-        return $this;
-    }
-
     public function getType(): string {
         return $this->type;
-    }
-
-    public function setMadeBy(string $made_by): self {
-        $this->made_by = $made_by;
-        return $this;
     }
 
     public function getMadeBy(): string {
@@ -56,15 +37,14 @@ class Equipment
      * @param array $data
      * @return self
      */
-    public function fromArray(array $data): self {
-        if (isset($data['id'])) {
-            $this->setId($data['id']);
-        }
-        
-        return $this
-            ->setName($data['name'])
-            ->setType($data['type'])
-            ->setMadeBy($data['made_by']);
+    public function fromArray(array $data): self 
+    {
+        return new self(
+            $data['name'],
+            $data['type'],
+            $data['made_by'],
+            $data['id'] ?? null
+        );  
     }
 
     /**
@@ -84,6 +64,16 @@ class Equipment
         }
 
         return $data;
+    }   
+
+    /**
+     *  Convierte el objeto de equipamiento a un array para serializar
+     *
+     * @return array
+     */
+    public function jsonSerialize(): array 
+    {
+        return $this->toArray();
     }
-    
+
 }

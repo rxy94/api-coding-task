@@ -13,41 +13,40 @@ class CharacterValidator
         int $equipmentId,
         int $factionId
     ): void {
-        $builder = CharacterValidationException::builder();
 
         # Validamos los campos requeridos
         if (empty($name)) {
-            $builder->withNameError();
+            throw CharacterValidationException::withNameError();
         } elseif (strlen($name) > 100) {
-            $builder->withNameLengthError();
+            throw CharacterValidationException::withNameLengthError();
         }
 
         if (empty($birthDate)) {
-            $builder->withBirthDateError();
+            throw CharacterValidationException::withBirthDateError();
         } else {
             $date = \DateTime::createFromFormat('Y-m-d', $birthDate);
             if (!$date || $date->format('Y-m-d') !== $birthDate) {
-                $builder->withBirthDateFormatError();
+                throw CharacterValidationException::withBirthDateFormatError();
             }
         }
 
         if (empty($kingdom)) {
-            $builder->withKingdomError();
+            throw CharacterValidationException::withKingdomError();
         } elseif (strlen($kingdom) > 100) {
-            $builder->withKingdomLengthError();
+            throw CharacterValidationException::withKingdomLengthError();
         }
 
         if ($equipmentId <= 0) {
-            $builder->withEquipmentIdError();
+            throw CharacterValidationException::withEquipmentIdError();
+        } elseif (!is_int($equipmentId)) {
+            throw CharacterValidationException::withEquipmentIdTypeError();
         }
 
         if ($factionId <= 0) {
-            $builder->withFactionIdError();
+            throw CharacterValidationException::withFactionIdError();
+        } elseif (!is_int($factionId)) {
+            throw CharacterValidationException::withFactionIdTypeError();
         }
 
-        $exception = $builder->build();
-        if ($exception->getErrors()) {
-            throw $exception;
-        }
     }
 } 
