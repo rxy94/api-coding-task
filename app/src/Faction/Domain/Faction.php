@@ -2,39 +2,24 @@
 
 namespace App\Faction\Domain;
 
-class Faction
+use JsonSerializable;
+
+class Faction implements JsonSerializable
 {
-
-    private ?int $id = null;
-    private string $faction_name;
-    private string $description;
-
-    public function __construct() 
-    {
+    public function __construct(
+        private string $faction_name,
+        private string $description,
+        private ?int $id = null
+    ) {
     }
 
-    # Getters y setters
-    public function setId(?int $id): self {
-        $this->id = $id;
-        return $this;
-    }
-
+    # Getters
     public function getId(): ?int {
         return $this->id;
     }
 
-    public function setName(string $faction_name): self {
-        $this->faction_name = $faction_name;
-        return $this;
-    }
-
     public function getName(): string {
         return $this->faction_name;
-    }
-
-    public function setDescription(string $description): self {
-        $this->description = $description;
-        return $this;
     }
 
     public function getDescription(): string {
@@ -47,14 +32,13 @@ class Faction
      * @param array $data
      * @return self
      */
-    public function fromArray(array $data): self {
-        if (isset($data['id'])) {
-            $this->setId($data['id']);
-        }
-        
-        return $this
-            ->setName($data['faction_name'])
-            ->setDescription($data['description']);
+    public function fromArray(array $data): self 
+    {
+        return new self(
+            $data['faction_name'],
+            $data['description'],
+            $data['id'] ?? null
+        );
     }
 
     /**
@@ -65,16 +49,23 @@ class Faction
     public function toArray(): array {
         $data = [
             'faction_name' => $this->faction_name,
-            'description' => $this->description
+            'description'  => $this->description
         ];
 
-        if (isset($this->id)) {
+        if ($this->id !== null) {
             $data['id'] = $this->id;
         }
 
         return $data;
     }
     
-    
+    /**
+     * Convierte la facción a un array para serializar
+     *
+     * @return array
+     */
+    public function jsonSerialize(): array {
+        return $this->toArray();
+    }
 
 }

@@ -23,7 +23,7 @@ use App\Faction\Domain\FactionRepository;
 use App\Faction\Application\ReadFactionUseCase;
 use App\Faction\Application\ReadFactionByIdUseCase;
 use App\Faction\Application\CreateFactionUseCase;
-use App\Faction\Application\ValidateFactionUseCase;
+use App\Faction\Domain\Service\FactionValidator;
 use App\Faction\Infrastructure\MySQLFactionRepository;
 use App\Faction\Infrastructure\Http\ReadFactionController;
 use App\Faction\Infrastructure\Http\CreateFactionController;
@@ -106,7 +106,7 @@ $containerBuilder->addDefinitions([
     CreateFactionUseCase::class => function (ContainerInterface $c) {
         return new CreateFactionUseCase(
             $c->get(FactionRepository::class),
-            $c->get(ValidateFactionUseCase::class)  
+            $c->get(FactionValidator::class)
         );
     },
     EquipmentRepository::class => function (ContainerInterface $c) {

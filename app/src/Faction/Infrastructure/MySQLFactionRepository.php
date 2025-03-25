@@ -12,9 +12,10 @@ class MySQLFactionRepository implements FactionRepository
     {
     }
 
-    public function find(int $id): ?Faction 
+    public function findById(int $id): ?Faction 
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM factions WHERE id = :id');
+        $sql = 'SELECT * FROM factions WHERE id = :id';
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -22,33 +23,39 @@ class MySQLFactionRepository implements FactionRepository
             return null;
         }
 
-        return self::fromArray($data, $this->pdo);
+        return $this->fromArray($data);
         
     }
 
     private function fromArray(array $data): Faction 
     {
-        $faction = new Faction();
-
-        if (isset($data['id'])) {
-            $faction->setId($data['id']);
-        }
+        $faction = new Faction(
+            $data['faction_name'],
+            $data['description'],
+            $data['id'] ?? null
+        );
         
-        return $faction
-            ->setName($data['faction_name'])
-            ->setDescription($data['description']);
+        return $faction;
     }
 
     public function findAll(): array 
     {
-        $stmt = $this->pdo->query('SELECT * FROM factions');
-        $factions = [];
+        try {
+            $sql = 'SELECT * FROM factions';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            $factions = [];
 
-        while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $factions[] = self::fromArray($data);
+            while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $faction = self::fromArray($data);
+                $factions[] = $faction;
+            }
+
+            return $factions;
+
+        } catch (\PDOException $e) {
+            throw new \PDOException("Error al obtener las facciones: " . $e->getMessage());
         }
-
-        return $factions;
     }
 
     public function save(Faction $faction): Faction 
@@ -64,17 +71,23 @@ class MySQLFactionRepository implements FactionRepository
     {
         $sql = 'INSERT INTO factions (faction_name, description)    
                 VALUES (:faction_name, :description)';
+
         $stmt = $this->pdo->prepare($sql);
         $result = $stmt->execute([
             'faction_name' => $faction->getName(),
-            'description' => $faction->getDescription(),
+            'description'  => $faction->getDescription(),
         ]);
         
         if ($result) {
-            $faction->setId((int) $this->pdo->lastInsertId());
+            $id = (int) $this->pdo->lastInsertId();
+            return new Faction(
+                $faction->getName(),
+                $faction->getDescription(),
+                $id
+            );
         }
 
-        return $faction;
+        throw new \RuntimeException('Error al insertar la facción');
     }
 
     private function update(Faction $faction): Faction 
@@ -83,18 +96,24 @@ class MySQLFactionRepository implements FactionRepository
                 SET faction_name = :faction_name, 
                     description = :description 
                 WHERE id = :id';
+
         $stmt = $this->pdo->prepare($sql);
         $result = $stmt->execute([
-            'id' => $faction->getId(),
+            'id'           => $faction->getId(),
             'faction_name' => $faction->getName(),
-            'description' => $faction->getDescription(),
+            'description'  => $faction->getDescription(),
         ]);
 
         if ($result) {
-            $faction->setId((int) $this->pdo->lastInsertId());
+            $id = (int) $this->pdo->lastInsertId();
+            return new Faction(
+                $faction->getName(),
+                $faction->getDescription(),
+                $id
+            );
         }
 
-        return $faction;
+        throw new \RuntimeException('Error al actualizar la facción');
     }
 
     public function delete(Faction $faction): bool 
@@ -103,7 +122,8 @@ class MySQLFactionRepository implements FactionRepository
             return false;
         }
 
-        $stmt = $this->pdo->prepare('DELETE FROM factions WHERE id = :id');
+        $sql = 'DELETE FROM factions WHERE id = :id';
+        $stmt = $this->pdo->prepare($sql);
         return $stmt->execute(['id' => $faction->getId()]);
     }
 

@@ -4,11 +4,13 @@ namespace App\Faction\Application;
 
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
+use App\Faction\Domain\Service\FactionValidator;
 
-class CreateFactionUseCase {
+class CreateFactionUseCase 
+{
     public function __construct(
         private FactionRepository $repository,
-        private ValidateFactionUseCase $validator
+        private FactionValidator $validator
     ) {
     }
 
@@ -18,16 +20,17 @@ class CreateFactionUseCase {
     ): Faction {
         
         # Validamos datos
-        $this->validator->execute($faction_name, $description);
+        $this->validator->validate($faction_name, $description);
 
-        $faction = new Faction();
-        $faction->setName($faction_name);
-        $faction->setDescription($description);
+        # Creamos la facción
+        $faction = new Faction(
+            $faction_name,
+            $description
+        );
 
-        $this->repository->save($faction);
+        # Guardamos la facción
+        return $this->repository->save($faction);
 
-        return $faction;
     }
-    
     
 }   

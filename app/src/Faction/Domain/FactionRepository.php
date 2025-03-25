@@ -4,7 +4,7 @@ namespace App\Faction\Domain;
 
 interface FactionRepository 
 {
-    public function find(int $id): ?Faction;
+    public function findById(int $id): ?Faction;
 
     public function findAll(): array;
 
