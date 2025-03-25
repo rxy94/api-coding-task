@@ -3,6 +3,7 @@
 namespace App\Character\Infrastructure\Http;
 
 use App\Character\Application\ReadCharacterUseCase;
+use App\Character\Domain\Character;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -18,11 +19,15 @@ class ReadCharacterController {
             $characters = $this->readCharacterUseCase->execute();
                 
             $response->getBody()->write(json_encode([
-                'data' => $characters,
+                'characters' => array_map(
+                    function (Character $character) {
+                        return CharacterToJsonTransformer::transform($character);
+                    },
+                    $characters
+                ),
                 'message' => 'Personajes obtenidos correctamente'
             ]));
                 
-            //dump(json_last_error_msg());
             return $response->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {

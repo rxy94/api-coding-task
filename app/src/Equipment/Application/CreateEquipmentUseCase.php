@@ -3,8 +3,10 @@
 namespace App\Equipment\Application;
 
 use App\Equipment\Domain\Equipment;
+use App\Equipment\Domain\EquipmentFactory;
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\Service\EquipmentValidator;
+
 class CreateEquipmentUseCase
 {
     public function __construct(
@@ -30,7 +32,7 @@ class CreateEquipmentUseCase
         # Validamos los datos
         $this->equipmentValidator->validate($name, $type, $made_by);
 
-        $equipment = new Equipment(
+        $equipment = EquipmentFactory::build(
             $name,
             $type,
             $made_by

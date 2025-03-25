@@ -13,7 +13,7 @@ class ReadCharacterByIdUseCase {
 
     public function execute(int $id): Character
     {
-        return $this->repository->find($id);
+        return $this->repository->findById($id);
     }
 
 }

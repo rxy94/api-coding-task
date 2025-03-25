@@ -37,18 +37,17 @@ class CreateCharacterController
                 $data['faction_id']
             );
             
-            # Devolvemos el id del personaje creado
+            # Devolvemos el personaje creado
             $response->getBody()->write(json_encode([
-                'id' => $character->getId(),
+                'character' => CharacterToJsonTransformer::transform($character),
                 'message' => 'El personaje se ha creado correctamente'
             ]));
             
             return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 
-        } catch (CharacterValidationException $e) { # Capturamos la excepción de validación específica de personajes
+        } catch (CharacterValidationException $e) {
             $response->getBody()->write(json_encode([
                 'error' => $e->getMessage() 
-                //He borrado messages, no hace falta usar getErrors() ya que se lanza el mensaje de la excepción con el método build()
             ]));
             
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
