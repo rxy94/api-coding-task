@@ -13,7 +13,6 @@ class EquipmentValidator
     ): void {
 
         # Validamos los campos requeridos   
-
         if (empty($name)) {
             throw EquipmentValidationException::withNameError();
         } elseif (strlen($name) > 100) {

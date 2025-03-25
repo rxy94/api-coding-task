@@ -10,7 +10,6 @@ use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 
 use App\Character\Domain\CharacterRepository;
-use App\Character\Domain\Exception\CharacterValidationException;
 use App\Character\Application\ReadCharacterUseCase;
 use App\Character\Application\ReadCharacterByIdUseCase;
 use App\Character\Application\CreateCharacterUseCase;
@@ -21,7 +20,6 @@ use App\Character\Infrastructure\Http\ReadCharacterByIdController;
 use App\Character\Infrastructure\Http\ReadCharacterController;
 
 use App\Faction\Domain\FactionRepository;
-use App\Faction\Domain\Exception\FactionValidationException;
 use App\Faction\Application\ReadFactionUseCase;
 use App\Faction\Application\ReadFactionByIdUseCase;
 use App\Faction\Application\CreateFactionUseCase;
@@ -34,10 +32,10 @@ use App\Faction\Infrastructure\Http\ReadFactionByIdController;
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Application\ReadEquipmentUseCase;
 use App\Equipment\Application\CreateEquipmentUseCase;
+use App\Equipment\Domain\Service\EquipmentValidator;
 use App\Equipment\Infrastructure\MySQLEquipmentRepository;
 use App\Equipment\Infrastructure\Http\CreateEquipmentController;
 use App\Equipment\Infrastructure\Http\ReadEquipmentController;
-use App\Shared\Infrastructure\Exception\ErrorHandler;
 
 # Creamos el contenedor de dependencias
 $containerBuilder = new ContainerBuilder();
@@ -118,7 +116,8 @@ $containerBuilder->addDefinitions([
     },
     CreateEquipmentUseCase::class => function (ContainerInterface $c) {
         return new CreateEquipmentUseCase(
-            $c->get(EquipmentRepository::class)
+            $c->get(EquipmentRepository::class),
+            $c->get(EquipmentValidator::class)
         );
     },
     ReadEquipmentUseCase::class => function (ContainerInterface $c) {

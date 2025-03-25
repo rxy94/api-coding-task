@@ -43,7 +43,7 @@ class CreateCharacterController
                 'message' => 'El personaje se ha creado correctamente'
             ]));
             
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 
         } catch (CharacterValidationException $e) { # Capturamos la excepción de validación específica de personajes
             $response->getBody()->write(json_encode([
@@ -51,7 +51,7 @@ class CreateCharacterController
                 //He borrado messages, no hace falta usar getErrors() ya que se lanza el mensaje de la excepción con el método build()
             ]));
             
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
 
         }
     }

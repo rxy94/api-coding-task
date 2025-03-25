@@ -41,7 +41,7 @@ class CreateEquipmentController
                 'message' => 'El equipamiento se ha creado correctamente'
             ]));
 
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 
         } catch (EquipmentValidationException $e) {
             $response->getBody()->write(json_encode([

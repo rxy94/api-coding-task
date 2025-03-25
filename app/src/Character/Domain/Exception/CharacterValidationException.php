@@ -16,6 +16,8 @@ class CharacterValidationException extends \DomainException
     private const FACTION_ID_ERROR = "El ID de la facción debe ser un número positivo";
     private const FACTION_ID_TYPE_ERROR = "El ID de la facción debe ser un número entero";
 
+    # Patrones de diseño: Constructor Semántico
+
     private function __construct(string $message = self::MESSAGE)
     {
         parent::__construct($message);

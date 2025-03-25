@@ -4,10 +4,13 @@ namespace App\Equipment\Application;
 
 use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
-
+use App\Equipment\Domain\Service\EquipmentValidator;
 class CreateEquipmentUseCase
 {
-    public function __construct(private EquipmentRepository $equipmentRepository)
+    public function __construct(
+        private EquipmentRepository $equipmentRepository,
+        private EquipmentValidator $equipmentValidator
+    )
     {
     }
 
@@ -18,18 +21,23 @@ class CreateEquipmentUseCase
      * @param string $made_by
      * @return Equipment
      */     
-    public function execute(string $name, string $type, string $made_by): Equipment
-    {
-        //TODO: Validar datos
+    public function execute(
+        string $name, 
+        string $type, 
+        string $made_by
+    ): Equipment {
 
-        $equipment = new Equipment();
-        $equipment->setName($name);
-        $equipment->setType($type);
-        $equipment->setMadeBy($made_by);
+        # Validamos los datos
+        $this->equipmentValidator->validate($name, $type, $made_by);
 
-        $this->equipmentRepository->save($equipment);
+        $equipment = new Equipment(
+            $name,
+            $type,
+            $made_by
+        );
 
-        return $equipment;
+        # Guardamos el equipamiento
+        return $this->equipmentRepository->save($equipment);
     }
 
 }
