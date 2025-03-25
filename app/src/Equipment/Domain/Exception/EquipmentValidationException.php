@@ -2,61 +2,49 @@
 
 namespace App\Equipment\Domain\Exception;
 
-use App\Shared\Domain\Exception\ValidationExceptionInterface;
-
-class EquipmentValidationException extends \DomainException implements ValidationExceptionInterface
+class EquipmentValidationException extends \DomainException
 {
     private const MESSAGE = "Error de validación del equipamiento";
-    private array $errors = [];
+    private const NAME_ERROR = "El nombre es requerido";
+    private const NAME_LENGTH_ERROR = "El nombre no puede exceder los 100 caracteres";
+    private const TYPE_ERROR = "El tipo es requerido";
+    private const TYPE_LENGTH_ERROR = "El tipo no puede exceder los 100 caracteres";
+    private const MADE_BY_ERROR = "El fabricante es requerido";
+    private const MADE_BY_LENGTH_ERROR = "El fabricante no puede exceder los 100 caracteres";
 
-    private function __construct()
+    private function __construct(string $message = self::MESSAGE)
     {
-        parent::__construct(self::MESSAGE);
+        parent::__construct($message);
     }
 
-    public static function builder(): self
+    public static function withNameError(): static
     {
-        return new self();
+        return new self(self::NAME_ERROR);
     }
 
-    public function withNameError(): self
+    public static function withNameLengthError(): static
     {
-        $this->errors[] = "El nombre es requerido";
-        return $this;
+        return new self(self::NAME_LENGTH_ERROR);
     }
 
-    public function withNameLengthError(): self
+    public static function withTypeError(): static
     {
-        $this->errors[] = "El nombre no puede exceder los 100 caracteres";
-        return $this;
+        return new self(self::TYPE_ERROR);
     }
 
-    public function withTypeError(): self
+    public static function withTypeErrorLengthError(): static
     {
-        $this->errors[] = "El tipo es requerido";
-        return $this;
+        return new self(self::TYPE_LENGTH_ERROR);
     }
 
-    public function withMadeByError(): self
+    public static function withMadeByError(): static
     {
-        $this->errors[] = "El fabricante es requerido";
-        return $this;
+        return new self(self::MADE_BY_ERROR);
     }
 
-    public function withMadeByLengthError(): self
+    public static function withMadeByLengthError(): static
     {
-        $this->errors[] = "El fabricante no puede exceder los 100 caracteres";
-        return $this;
-    }
-    
-    public function build(): self
-    {
-        return $this;
-    }
-
-    public function getErrors(): array  
-    {
-        return $this->errors;
+        return new self(self::MADE_BY_LENGTH_ERROR);
     }
 
 }

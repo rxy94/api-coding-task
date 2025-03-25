@@ -15,15 +15,10 @@ class CharacterValidationException extends \DomainException
     private const EQUIPMENT_ID_TYPE_ERROR = "El ID del equipamiento debe ser un número entero";
     private const FACTION_ID_ERROR = "El ID de la facción debe ser un número positivo";
     private const FACTION_ID_TYPE_ERROR = "El ID de la facción debe ser un número entero";
-    
+
     private function __construct(string $message = self::MESSAGE)
     {
         parent::__construct($message);
-    }
-
-    public static function builder(): self
-    {
-        return new self();
     }
 
     public static function withNameError(): static
@@ -74,11 +69,6 @@ class CharacterValidationException extends \DomainException
     public static function withFactionIdTypeError(): static
     {
         return new self(self::FACTION_ID_TYPE_ERROR);
-    }
-
-    public function build(): self
-    {
-        return $this;
     }
 
 } 

@@ -11,30 +11,25 @@ class EquipmentValidator
         string $type,
         string $madeBy
     ): void {
-        $builder = EquipmentValidationException::builder();
+
+        # Validamos los campos requeridos   
 
         if (empty($name)) {
-            $builder->withNameError();
+            throw EquipmentValidationException::withNameError();
         } elseif (strlen($name) > 100) {
-            $builder->withNameLengthError();
+            throw EquipmentValidationException::withNameLengthError();
         }
 
         if (empty($type)) {
-            $builder->withTypeError();
+            throw EquipmentValidationException::withTypeError();
         } elseif (strlen($type) > 100) {
-            $builder->withTypeError();
+            throw EquipmentValidationException::withTypeErrorLengthError();
         }
 
         if (empty($madeBy)) {
-            $builder->withMadeByError();
+            throw EquipmentValidationException::withMadeByError();
         } elseif (strlen($madeBy) > 100) {
-            $builder->withMadeByLengthError();
-        }
-
-        $exception = $builder->build();
-
-        if ($exception->getErrors()) {
-            throw $exception;
+            throw EquipmentValidationException::withMadeByLengthError();
         }
 
     }

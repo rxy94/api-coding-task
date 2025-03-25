@@ -17,7 +17,16 @@ class CreateEquipmentController
     {
         $data = $request->getParsedBody();
         
-        //TODO: Validar los campos requeridos
+        # Validamos los campos requeridos
+        $requiredFields = ['name', 'type', 'made_by'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field]) || empty($data[$field])) {
+                $response->getBody()->write(json_encode([
+                    'error' => "Campo requerido: {$field}"
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+        }
         
         try {
             $equipment = $this->useCase->execute(
@@ -36,8 +45,7 @@ class CreateEquipmentController
 
         } catch (EquipmentValidationException $e) {
             $response->getBody()->write(json_encode([
-                'error' => 'Error al crear el equipamiento',
-                'message' => $e->getMessage()
+                'error' => $e->getMessage()
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
