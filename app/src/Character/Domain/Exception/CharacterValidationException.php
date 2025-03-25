@@ -25,52 +25,52 @@ class CharacterValidationException extends \DomainException
 
     public static function withNameError(): static
     {
-        return new self(self::NAME_ERROR);
+        return new static(self::NAME_ERROR);
     }
 
     public static function withNameLengthError(): static
     {
-        return new self(self::NAME_LENGTH_ERROR);
+        return new static(self::NAME_LENGTH_ERROR);
     }
 
     public static function withBirthDateError(): static
     {
-        return new self(self::BIRTH_DATE_ERROR);
+        return new static(self::BIRTH_DATE_ERROR);
     }
 
     public static function withBirthDateFormatError(): static
     {
-        return new self(self::BIRTH_DATE_FORMAT_ERROR);
+        return new static(self::BIRTH_DATE_FORMAT_ERROR);
     }
 
     public static function withKingdomError(): static
     {
-        return new self(self::KINGDOM_ERROR);
+        return new static(self::KINGDOM_ERROR);
     }
 
     public static function withKingdomLengthError(): static
     {
-        return new self(self::KINGDOM_LENGTH_ERROR);
+        return new static(self::KINGDOM_LENGTH_ERROR);
     }
 
     public static function withEquipmentIdError(): static
     {
-        return new self(self::EQUIPMENT_ID_ERROR);
+        return new static(self::EQUIPMENT_ID_ERROR);
     }
 
     public static function withEquipmentIdTypeError(): static
     {
-        return new self(self::EQUIPMENT_ID_TYPE_ERROR);
+        return new static(self::EQUIPMENT_ID_TYPE_ERROR);
     }
 
     public static function withFactionIdError(): static
     {
-        return new self(self::FACTION_ID_ERROR);
+        return new static(self::FACTION_ID_ERROR);
     }
 
     public static function withFactionIdTypeError(): static
     {
-        return new self(self::FACTION_ID_TYPE_ERROR);
+        return new static(self::FACTION_ID_TYPE_ERROR);
     }
 
 } 

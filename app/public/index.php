@@ -14,10 +14,10 @@ use App\Character\Application\ReadCharacterUseCase;
 use App\Character\Application\ReadCharacterByIdUseCase;
 use App\Character\Application\CreateCharacterUseCase;
 use App\Character\Domain\Service\CharacterValidator;
-use App\Character\Infrastructure\MySQLCharacterRepository;
 use App\Character\Infrastructure\Http\CreateCharacterController;
 use App\Character\Infrastructure\Http\ReadCharacterByIdController;
 use App\Character\Infrastructure\Http\ReadCharacterController;
+use App\Character\Infrastructure\Persistence\Pdo\MySQLCharacterRepository;
 
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Application\ReadFactionUseCase;

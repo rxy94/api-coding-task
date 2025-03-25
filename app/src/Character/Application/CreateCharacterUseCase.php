@@ -3,6 +3,7 @@
 namespace App\Character\Application;
 
 use App\Character\Domain\Character;
+use App\Character\Domain\CharacterFactory;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Service\CharacterValidator;
 
@@ -26,7 +27,7 @@ class CreateCharacterUseCase
         $this->validator->validate($name, $birthDate, $kingdom, $equipmentId, $factionId);
         
         # Creamos el personaje
-        $character = new Character(
+        $character = CharacterFactory::build(
             $name,
             $birthDate,
             $kingdom,
