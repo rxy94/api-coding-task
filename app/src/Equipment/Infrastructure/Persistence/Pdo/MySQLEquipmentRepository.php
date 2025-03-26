@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Equipment\Infrastructure;
+namespace App\Equipment\Infrastructure\Persistence\Pdo;
 
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\Equipment;
+use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentNotFoundException;
+use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentsNotFoundException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
 use PDO;
 
 class MySQLEquipmentRepository implements EquipmentRepository
@@ -20,22 +23,10 @@ class MySQLEquipmentRepository implements EquipmentRepository
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$data) {
-            return null;
+            throw EquipmentNotFoundException::build();
         }
 
-        return self::fromArray($data, $this->pdo);
-    }
-
-    private function fromArray(array $data): Equipment
-    {
-        $equipment = new Equipment(
-            $data['name'],
-            $data['type'],
-            $data['made_by'],
-            $data['id'] ?? null
-        );
-
-        return $equipment;
+        return MySQLEquipmentFactory::buildFromArray($data);
     }
 
     public function findAll(): array
@@ -47,13 +38,13 @@ class MySQLEquipmentRepository implements EquipmentRepository
             $equipments = [];
 
             while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $equipments[] = self::fromArray($data);
+                $equipments[] = MySQLEquipmentFactory::buildFromArray($data);
             }
 
             return $equipments;
 
         } catch (\PDOException $e) {
-            throw new \PDOException("Error al obtener los equipos: " . $e->getMessage());
+            throw EquipmentsNotFoundException::build();
         }
     }
 
@@ -73,22 +64,21 @@ class MySQLEquipmentRepository implements EquipmentRepository
 
         $stmt = $this->pdo->prepare($sql);
         $result = $stmt->execute([
-            'name'    => $equipment->getName(),
-            'type'    => $equipment->getType(),
-            'made_by' => $equipment->getMadeBy(),
+            MySQLEquipmentToArrayTransformer::transform($equipment)
         ]);
 
-        if ($result) {
-            $id = (int) $this->pdo->lastInsertId();
-            return new Equipment(
-                $equipment->getName(),
-                $equipment->getType(),
-                $equipment->getMadeBy(),
-                $id
-            );
+        if (!$result) {
+            throw RowInsertionFailedException::build();
         }
 
-        throw new \RuntimeException('Error al insertar el equipo');
+        return MySQLEquipmentFactory::buildFromArray(
+            [
+                'id'      => $this->pdo->lastInsertId(),
+                'name'    => $equipment->getName(),
+                'type'    => $equipment->getType(),
+                'made_by' => $equipment->getMadeBy(),
+            ]
+        );
     }
 
     private function update(Equipment $equipment): Equipment

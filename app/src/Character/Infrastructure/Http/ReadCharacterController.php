@@ -4,6 +4,7 @@ namespace App\Character\Infrastructure\Http;
 
 use App\Character\Application\ReadCharacterUseCase;
 use App\Character\Domain\Character;
+use App\Character\Infrastructure\Persistence\Pdo\MySQLCharacterToArrayTransformer;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -21,7 +22,8 @@ class ReadCharacterController {
             $response->getBody()->write(json_encode([
                 'characters' => array_map(
                     function (Character $character) {
-                        return CharacterToJsonTransformer::transform($character);
+                        return MySQLCharacterToArrayTransformer::transform($character);
+                        //return CharacterToJsonTransformer::transform($character);
                     },
                     $characters
                 ),

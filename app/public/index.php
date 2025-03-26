@@ -30,11 +30,13 @@ use App\Faction\Infrastructure\Http\CreateFactionController;
 use App\Faction\Infrastructure\Http\ReadFactionByIdController;
 
 use App\Equipment\Domain\EquipmentRepository;
+use App\Equipment\Domain\Service\EquipmentValidator;
 use App\Equipment\Application\ReadEquipmentUseCase;
 use App\Equipment\Application\CreateEquipmentUseCase;
-use App\Equipment\Domain\Service\EquipmentValidator;
-use App\Equipment\Infrastructure\MySQLEquipmentRepository;
+use App\Equipment\Application\ReadEquipmentByIdUseCase;
+use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentRepository;
 use App\Equipment\Infrastructure\Http\CreateEquipmentController;
+use App\Equipment\Infrastructure\Http\ReadEquipmentByIdController;
 use App\Equipment\Infrastructure\Http\ReadEquipmentController;
 
 # Creamos el contenedor de dependencias
@@ -125,6 +127,11 @@ $containerBuilder->addDefinitions([
             $c->get(EquipmentRepository::class)
         );
     },
+    ReadEquipmentByIdUseCase::class => function (ContainerInterface $c) {
+        return new ReadEquipmentByIdUseCase(
+            $c->get(EquipmentRepository::class)
+        );
+    },
 ]);
 
 # Creamos el contenedor
@@ -149,6 +156,7 @@ $app->get('/factions/{id}', ReadFactionByIdController::class);
 # Rutas para equipamientos
 $app->post('/equipments', CreateEquipmentController::class);
 $app->get('/equipmentsList', ReadEquipmentController::class);
+$app->get('/equipments/{id}', ReadEquipmentByIdController::class);
 
 # Manejamos las rutas no encontradas
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Response $response) {

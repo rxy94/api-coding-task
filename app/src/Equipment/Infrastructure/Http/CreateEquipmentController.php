@@ -4,6 +4,8 @@ namespace App\Equipment\Infrastructure\Http;
 
 use App\Equipment\Application\CreateEquipmentUseCase;
 use App\Equipment\Domain\Exception\EquipmentValidationException;
+use App\Equipment\Infrastructure\Http\EquipmentToJsonTransformer;
+use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentToArrayTransformer;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -37,7 +39,8 @@ class CreateEquipmentController
 
             # Devolvemos el id del equipamiento creado
             $response->getBody()->write(json_encode([
-                'id' => $equipment->getId(),
+                //'equipment' => EquipmentToJsonTransformer::transform($equipment),
+                'equipment' => MySQLEquipmentToArrayTransformer::transform($equipment),
                 'message' => 'El equipamiento se ha creado correctamente'
             ]));
 
