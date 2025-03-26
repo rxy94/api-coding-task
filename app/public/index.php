@@ -24,20 +24,20 @@ use App\Faction\Application\ReadFactionUseCase;
 use App\Faction\Application\ReadFactionByIdUseCase;
 use App\Faction\Application\CreateFactionUseCase;
 use App\Faction\Domain\Service\FactionValidator;
-use App\Faction\Infrastructure\MySQLFactionRepository;
 use App\Faction\Infrastructure\Http\ReadFactionController;
 use App\Faction\Infrastructure\Http\CreateFactionController;
 use App\Faction\Infrastructure\Http\ReadFactionByIdController;
+use App\Faction\Infrastructure\Persistence\Pdo\MySQLFactionRepository;
 
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\Service\EquipmentValidator;
 use App\Equipment\Application\ReadEquipmentUseCase;
 use App\Equipment\Application\CreateEquipmentUseCase;
 use App\Equipment\Application\ReadEquipmentByIdUseCase;
-use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentRepository;
 use App\Equipment\Infrastructure\Http\CreateEquipmentController;
 use App\Equipment\Infrastructure\Http\ReadEquipmentByIdController;
 use App\Equipment\Infrastructure\Http\ReadEquipmentController;
+use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentRepository;
 
 # Creamos el contenedor de dependencias
 $containerBuilder = new ContainerBuilder();

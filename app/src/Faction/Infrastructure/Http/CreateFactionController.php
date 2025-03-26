@@ -3,6 +3,7 @@
 namespace App\Faction\Infrastructure\Http;
 
 use App\Faction\Application\CreateFactionUseCase;
+use App\Faction\Domain\FactionToArrayTransformer;
 use App\Faction\Domain\Exception\FactionValidationException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -36,7 +37,7 @@ class CreateFactionController
 
             # Devolvemos una respuesta de éxito
             $response->getBody()->write(json_encode([
-                'id' => $faction->getId(),
+                'faction' => FactionToArrayTransformer::transform($faction),
                 'message' => 'La facción se ha creado correctamente'
             ]));
 

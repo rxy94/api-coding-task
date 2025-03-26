@@ -3,6 +3,7 @@
 namespace App\Character\Infrastructure\Http;
 
 use App\Character\Application\CreateCharacterUseCase;
+use App\Character\Domain\CharacterToArrayTransformer;
 use App\Character\Domain\Exception\CharacterValidationException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -39,7 +40,7 @@ class CreateCharacterController
             
             # Devolvemos el personaje creado
             $response->getBody()->write(json_encode([
-                'character' => CharacterToJsonTransformer::transform($character),
+                'character' => CharacterToArrayTransformer::transform($character),
                 'message' => 'El personaje se ha creado correctamente'
             ]));
             

@@ -2,11 +2,12 @@
 
 namespace App\Equipment\Infrastructure\Persistence\Pdo;
 
-use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\Equipment;
+use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentNotFoundException;
 use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentsNotFoundException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
 use PDO;
 
 class MySQLEquipmentRepository implements EquipmentRepository
@@ -63,9 +64,10 @@ class MySQLEquipmentRepository implements EquipmentRepository
                 VALUES (:name, :type, :made_by)';
 
         $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute([
+
+        $result = $stmt->execute(
             MySQLEquipmentToArrayTransformer::transform($equipment)
-        ]);
+        );
 
         if (!$result) {
             throw RowInsertionFailedException::build();
@@ -90,20 +92,21 @@ class MySQLEquipmentRepository implements EquipmentRepository
                 WHERE id = :id';
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([
-            'id'      => $equipment->getId(),
-            'name'    => $equipment->getName(),
-            'type'    => $equipment->getType(),
-            'made_by' => $equipment->getMadeBy(),
-        ]);
+        $result = $stmt->execute(
+            MySQLEquipmentToArrayTransformer::transform($equipment)
+        );
+
+        if (!$result) {
+            throw RowUpdateFailedException::build();
+        }
 
         return $equipment;
     }
 
     public function delete(Equipment $equipment): bool
     {
-        if (null !== $equipment->getId()) {
-            return false;
+        if (null === $equipment->getId()) {
+            throw EquipmentNotFoundException::build();
         }
 
         $sql = 'DELETE FROM equipments WHERE id = :id';

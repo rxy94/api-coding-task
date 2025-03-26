@@ -1,9 +1,14 @@
 <?php
 
-namespace App\Faction\Infrastructure;
+namespace App\Faction\Infrastructure\Persistence\Pdo;
 
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
+use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
+use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionsNotFoundException;
+use App\Faction\Infrastructure\Persistence\Pdo\MySQLFactionFactory;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
 use PDO;
 
 class MySQLFactionRepository implements FactionRepository 
@@ -20,22 +25,11 @@ class MySQLFactionRepository implements FactionRepository
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$data) {
-            return null;
+            throw FactionNotFoundException::build();
         }
 
-        return $this->fromArray($data);
+        return MySQLFactionFactory::buildFromArray($data);
         
-    }
-
-    private function fromArray(array $data): Faction 
-    {
-        $faction = new Faction(
-            $data['faction_name'],
-            $data['description'],
-            $data['id'] ?? null
-        );
-        
-        return $faction;
     }
 
     public function findAll(): array 
@@ -47,14 +41,13 @@ class MySQLFactionRepository implements FactionRepository
             $factions = [];
 
             while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $faction = self::fromArray($data);
-                $factions[] = $faction;
+                $factions[] = MySQLFactionFactory::buildFromArray($data);
             }
 
             return $factions;
 
         } catch (\PDOException $e) {
-            throw new \PDOException("Error al obtener las facciones: " . $e->getMessage());
+            throw FactionsNotFoundException::build();
         }
     }
 
@@ -73,21 +66,22 @@ class MySQLFactionRepository implements FactionRepository
                 VALUES (:faction_name, :description)';
 
         $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute([
-            'faction_name' => $faction->getName(),
-            'description'  => $faction->getDescription(),
-        ]);
-        
-        if ($result) {
-            $id = (int) $this->pdo->lastInsertId();
-            return new Faction(
-                $faction->getName(),
-                $faction->getDescription(),
-                $id
-            );
+
+        $result = $stmt->execute(
+            MySQLFactionToArrayTransformer::transform($faction)
+        );
+
+        if (!$result) {
+            throw RowInsertionFailedException::build();
         }
 
-        throw new \RuntimeException('Error al insertar la facción');
+        return MySQLFactionFactory::buildFromArray(
+            [
+                'id' => $this->pdo->lastInsertId(),
+                'faction_name' => $faction->getName(),
+                'description' => $faction->getDescription()
+            ]
+        );
     }
 
     private function update(Faction $faction): Faction 
@@ -99,27 +93,22 @@ class MySQLFactionRepository implements FactionRepository
 
         $stmt = $this->pdo->prepare($sql);
         $result = $stmt->execute([
-            'id'           => $faction->getId(),
+            'id' => $faction->getId(),
             'faction_name' => $faction->getName(),
-            'description'  => $faction->getDescription(),
+            'description' => $faction->getDescription()
         ]);
 
-        if ($result) {
-            $id = (int) $this->pdo->lastInsertId();
-            return new Faction(
-                $faction->getName(),
-                $faction->getDescription(),
-                $id
-            );
+        if (!$result) {
+            throw RowUpdateFailedException::build();
         }
 
-        throw new \RuntimeException('Error al actualizar la facción');
+        return $faction;
     }
 
     public function delete(Faction $faction): bool 
     {
-        if (null !== $faction->getId()) {
-            return false;
+        if (null === $faction->getId()) {
+            throw FactionNotFoundException::build();
         }
 
         $sql = 'DELETE FROM factions WHERE id = :id';

@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Equipment\Infrastructure\Persistence\Pdo;
+namespace App\Equipment\Domain;
 
 use App\Equipment\Domain\Equipment;
 
-class MySQLEquipmentToArrayTransformer
+class EquipmentToArrayTransformer
 {
     public static function transform(Equipment $equipment): array
     {
         $data = [
             'name'   => $equipment->getName(),
             'type'   => $equipment->getType(),
-            'made_by' => $equipment->getMadeBy(),
+            'made-by' => $equipment->getMadeBy(),
         ];
 
         if ($equipment->getId()) {

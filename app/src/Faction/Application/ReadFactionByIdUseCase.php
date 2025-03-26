@@ -2,8 +2,8 @@
 
 namespace App\Faction\Application;
 
-use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\Faction;
+use App\Faction\Domain\FactionRepository;
 
 class ReadFactionByIdUseCase {
 
@@ -13,7 +13,7 @@ class ReadFactionByIdUseCase {
 
     public function execute(int $id): Faction
     {
-        return $this->repository->find($id);
+        return $this->repository->findById($id);
     }
 
 }

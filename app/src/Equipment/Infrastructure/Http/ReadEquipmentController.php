@@ -2,9 +2,9 @@
 
 namespace App\Equipment\Infrastructure\Http;
 
-use App\Equipment\Application\ReadEquipmentUseCase;
 use App\Equipment\Domain\Equipment;
-use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentToArrayTransformer;
+use App\Equipment\Domain\EquipmentToArrayTransformer;
+use App\Equipment\Application\ReadEquipmentUseCase;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -21,7 +21,7 @@ class ReadEquipmentController {
         $response->getBody()->write(json_encode([
             'equipments' => array_map(
                 function (Equipment $equipment) {
-                    return MySQLEquipmentToArrayTransformer::transform($equipment);
+                    return EquipmentToArrayTransformer::transform($equipment);
                 },
                 $equipments
             ),

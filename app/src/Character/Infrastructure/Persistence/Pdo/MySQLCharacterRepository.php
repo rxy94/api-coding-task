@@ -7,6 +7,7 @@ use App\Character\Domain\CharacterRepository;
 use App\Character\Infrastructure\Persistence\Pdo\Exception\CharacterNotFoundException;
 use App\Character\Infrastructure\Persistence\Pdo\Exception\CharactersNotFoundException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
 use PDO;
 
 class MySQLCharacterRepository implements CharacterRepository
@@ -28,21 +29,6 @@ class MySQLCharacterRepository implements CharacterRepository
 
         return MySQLCharacterFactory::buildFromArray($data);
     }
-
-    /* private function fromArray(array $data): Character
-    {
-        $character = new Character(
-            $data['name'],
-            $data['birth_date'],
-            $data['kingdom'],
-            $data['equipment_id'],
-            $data['faction_id'],
-            $data['id'] ?? null
-        );
-
-        return $character;
-            
-    } */
 
     public function findAll(): array
     {
@@ -109,17 +95,21 @@ class MySQLCharacterRepository implements CharacterRepository
                 WHERE id = :id';
         
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(
+        $result = $stmt->execute(
             MySQLCharacterToArrayTransformer::transform($character)
         );
+
+        if (!$result) {
+            throw RowUpdateFailedException::build();
+        }
 
         return $character;
     }
 
     public function delete(Character $character): bool
     {
-        if (null !== $character->getId()) {
-            return false;
+        if (null === $character->getId()) {
+            throw CharacterNotFoundException::build();
         }
 
         $sql = 'DELETE FROM characters WHERE id = :id';

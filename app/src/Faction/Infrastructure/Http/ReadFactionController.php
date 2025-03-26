@@ -3,26 +3,29 @@
 namespace App\Faction\Infrastructure\Http;
 
 use App\Faction\Application\ReadFactionUseCase;
+use App\Faction\Domain\Faction;
+use App\Faction\Domain\FactionToArrayTransformer;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class ReadFactionController {
 
-    public function __construct(private ReadFactionUseCase $readFactionUseCase)
+    public function __construct(private ReadFactionUseCase $useCase)
     {
     }
 
     public function __invoke(Request $request, Response $response): Response
     {
-        $factions = $this->readFactionUseCase->execute();
-
-        $factionsArray = array_map(function($faction) {     
-            return $faction->toArray();
-        }, $factions);
+        $factions = $this->useCase->execute();
 
         $response->getBody()->write(json_encode([
-            'data' => $factionsArray,
-            'message' => 'Las facciones han sido obtenidas correctamente'
+            'factions' => array_map(
+                function (Faction $faction) {
+                    return FactionToArrayTransformer::transform($faction);
+                },
+                $factions
+            ),
+            'message' => 'Facciones obtenidas correctamente'
         ]));
 
         return $response->withHeader('Content-Type', 'application/json');

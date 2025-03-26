@@ -3,7 +3,7 @@
 namespace App\Equipment\Infrastructure\Http;
 
 use App\Equipment\Application\ReadEquipmentByIdUseCase;
-use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentToArrayTransformer;
+use App\Equipment\Domain\EquipmentToArrayTransformer;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -19,7 +19,7 @@ class ReadEquipmentByIdController
         $equipment = $this->useCase->execute($id);
 
         $response->getBody()->write(json_encode([
-            'equipment' => MySQLEquipmentToArrayTransformer::transform($equipment),
+            'equipment' => EquipmentToArrayTransformer::transform($equipment),
             'message' => 'Equipamiento encontrado correctamente'
         ]));
 
