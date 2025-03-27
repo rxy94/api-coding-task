@@ -4,6 +4,9 @@ namespace App\Character\Infrastructure\Persistence\Pdo;
 
 use App\Character\Domain\Character;
 
+/**
+ * Transforma un personaje en un array para ser insertado en la base de datos
+ */
 class MySQLCharacterToArrayTransformer
 {
     public static function transform(Character $character): array

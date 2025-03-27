@@ -10,6 +10,9 @@ use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedExcept
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
 use PDO;
 
+/**
+ * Maneja las operaciones directas con la base de datos
+ */
 class MySQLCharacterRepository implements CharacterRepository
 {
     public function __construct(private PDO $pdo)

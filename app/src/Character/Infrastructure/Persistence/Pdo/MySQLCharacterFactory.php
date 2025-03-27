@@ -5,6 +5,9 @@ namespace App\Character\Infrastructure\Persistence\Pdo;
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterFactory;
 
+/**
+ * Factory para crear personajes a partir de un array
+ */
 class MySQLCharacterFactory
 {
     public static function buildFromArray(array $data): Character
