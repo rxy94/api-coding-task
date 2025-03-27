@@ -14,80 +14,68 @@ class CachedMySQLEquipmentRepository implements EquipmentRepository
     public function __construct(
         private MySQLEquipmentRepository $mySQLEquipmentRepository,
         private Redis $redis,
-        private LoggerInterface $logger
+        private ?LoggerInterface $logger
     ) {
+    }
+
+    private function getKey(string $id): string
+    {
+        return __CLASS__ .":{$id}";
     }
 
     public function findById(int $id): ?Equipment
     {
-        try {
-            $cachedEquipment = $this->redis->get("equipment:{$id}");
+        $cachedEquipment = $this->redis->get($this->getKey($id));
 
-            if ($cachedEquipment) {
-                $this->logger->info('Equipo encontrado en caché', ['id' => $id]);
+        if ($cachedEquipment) {
+            $this->logger->info('Equipo encontrado en caché', ['id' => $id]);
 
-                return unserialize($cachedEquipment);
-            }
-
-            $equipment = $this->mySQLEquipmentRepository->findById($id);
-            $this->redis->set("equipment:{$id}", serialize($equipment));
-
-            return $equipment;
-
-        } catch (\Exception $e) {
-            $this->logger->error('Error encontrando equipo en caché', ['id' => $id, 'error' => $e->getMessage()]);
-            throw new Exception('Error encontrando equipo en caché', 500);      
+            return unserialize($cachedEquipment);
         }
+
+        $equipment = $this->mySQLEquipmentRepository->findById($id);
+        $this->redis->set($this->getKey($id), serialize($equipment));
+
+        return $equipment;
+
     }
 
     public function findAll(): array
     {
-        try {
-            $cachedEquipments = $this->redis->get('equipment:all');
+       
+        $cachedEquipments = $this->redis->get($this->getKey('all'));
 
-            if ($cachedEquipments) {
-                $this->logger->info('Obteniendo todos los equipos de la caché');    
+        if ($cachedEquipments) {
+            $this->logger->info('Obteniendo todos los equipos de la caché');    
 
-                return unserialize($cachedEquipments);
-            }
-
-            $equipments = $this->mySQLEquipmentRepository->findAll();
-            $this->redis->set('equipment:all', serialize($equipments));
-
-            return $equipments; 
-
-        } catch (\Exception $e) {
-            $this->logger->error('Error encontrando todos los equipos en caché', ['error' => $e->getMessage()]);
-            throw new Exception('Error encontrando todos los equipos en caché', 500);
+            return unserialize($cachedEquipments);
         }
+
+        $equipments = $this->mySQLEquipmentRepository->findAll();
+        $this->redis->set($this->getKey('all'), serialize($equipments));
+
+        return $equipments; 
+
     }
 
     public function save(Equipment $equipment): Equipment
     {
-        try {
-            $savedEquipment = $this->mySQLEquipmentRepository->save($equipment);
 
-            $this->redis->set("equipment:{$savedEquipment->getId()}", serialize($savedEquipment));
+        $savedEquipment = $this->mySQLEquipmentRepository->save($equipment);
 
-            return $savedEquipment;
+        $this->redis->set($this->getKey($savedEquipment->getId()), serialize($savedEquipment));
 
-        } catch (\Exception $e) {
-            $this->logger->error('Error guardando equipo en caché', ['error' => $e->getMessage()]);
-            throw new Exception('Error guardando equipo en caché', 500);        
-        }
+        return $savedEquipment;
+
     }
 
     public function delete(Equipment $equipment): bool
     {
-        try {
-            $this->mySQLEquipmentRepository->delete($equipment);
-            $this->redis->del("equipment:{$equipment->getId()}");
+       
+        $this->mySQLEquipmentRepository->delete($equipment);
+        $this->redis->del($this->getKey($equipment->getId()));
 
-            return true;
+        return true;
 
-        } catch (\Exception $e) {
-            $this->logger->error('Error eliminando equipo en caché', ['error' => $e->getMessage()]);
-            throw new Exception('Error eliminando equipo en caché', 500);
-        }
     }
 }

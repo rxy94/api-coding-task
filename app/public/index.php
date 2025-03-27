@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Slim\Factory\AppFactory;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
@@ -29,10 +30,10 @@ use App\Faction\Infrastructure\Http\ReadFactionController;
 use App\Faction\Infrastructure\Http\CreateFactionController;
 use App\Faction\Infrastructure\Http\ReadFactionByIdController;
 use App\Faction\Infrastructure\Persistence\Pdo\MySQLFactionRepository;
+use App\Faction\Infrastructure\Persistence\Cache\CachedMySQLFactionRepository;
 
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\Service\EquipmentValidator;
-use App\Equipment\Application\ReadEquipmentUseCase;
 use App\Equipment\Application\CreateEquipmentUseCase;
 use App\Equipment\Infrastructure\Http\CreateEquipmentController;
 use App\Equipment\Infrastructure\Http\ReadEquipmentByIdController;
@@ -40,13 +41,14 @@ use App\Equipment\Infrastructure\Http\ReadEquipmentController;
 use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentRepository;
 use App\Equipment\Infrastructure\Persistence\Cache\CachedMySQLEquipmentRepository;
 
-
 # Creamos el contenedor de dependencias
 $containerBuilder = new ContainerBuilder();
 
 # Cargamos las variables de entorno
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
+
+//dump($_ENV);
 
 # Añadimos las definiciones al contenedor
 $containerBuilder->addDefinitions([
@@ -78,16 +80,21 @@ $containerBuilder->addDefinitions([
         ]);
     },
     LoggerInterface::class => function () {
-        $logger = new Logger('app');
-        $logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
-        return $logger;
+        if ((bool) ((int) $_ENV['DEBUG_MODE'])) {
+            $logger = new Logger('app');
+            $logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
+
+            return $logger;
+        }
+
+        return new NullLogger();
     },
     CharacterRepository::class => function (ContainerInterface $c) {
-        if ($_ENV['CACHE_ENABLED']) {
+        if ((bool) ((int) $_ENV['CACHE_ENABLED'])) {
             return new CachedMySQLCharacterRepository(
                 new MySQLCharacterRepository($c->get(PDO::class)),
                 $c->get(Redis::class),
-                $_ENV['DEBUG_MODE'] ? $c->get(LoggerInterface::class) : null
+                $c->get(LoggerInterface::class)
             );
         }
 
@@ -102,6 +109,14 @@ $containerBuilder->addDefinitions([
         );
     },
     FactionRepository::class => function (ContainerInterface $c) {
+        if ((bool) ((int) $_ENV['CACHE_ENABLED'])) {
+            return new CachedMySQLFactionRepository(
+                new MySQLFactionRepository($c->get(PDO::class)),
+                $c->get(Redis::class),
+                $c->get(LoggerInterface::class),
+            );
+        }
+
         return new MySQLFactionRepository(
             $c->get(PDO::class)
         );
@@ -113,11 +128,11 @@ $containerBuilder->addDefinitions([
         );
     },
     EquipmentRepository::class => function (ContainerInterface $c) {
-        if ($_ENV['CACHE_ENABLED']) {
+        if ((bool) ((int) $_ENV['CACHE_ENABLED'])) {
             return new CachedMySQLEquipmentRepository(
                 new MySQLEquipmentRepository($c->get(PDO::class)),
                 $c->get(Redis::class),
-                $_ENV['DEBUG_MODE'] ? $c->get(LoggerInterface::class) : null
+                $c->get(LoggerInterface::class),
             );
         }
 
@@ -129,11 +144,6 @@ $containerBuilder->addDefinitions([
         return new CreateEquipmentUseCase(
             $c->get(EquipmentRepository::class),
             $c->get(EquipmentValidator::class)
-        );
-    },
-    ReadEquipmentUseCase::class => function (ContainerInterface $c) {
-        return new ReadEquipmentUseCase(
-            $c->get(EquipmentRepository::class)
         );
     },
 ]);

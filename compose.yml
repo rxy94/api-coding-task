@@ -5,8 +5,6 @@ services:
     image: graphicresources/itpg-api-coding-task:development
     working_dir: /var/www
     command: php -S 0.0.0.0:8080 -t public
-    environment:
-      docker: "true"
     ports:
       - "8080:8080"
     volumes:
@@ -28,6 +26,13 @@ services:
       interval: 3s
       timeout: 1s
       retries: 5
+    networks:
+      - bridge
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
     networks:
       - bridge
 

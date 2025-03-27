@@ -11,6 +11,10 @@ RUN docker-php-ext-install pdo_mysql
 
 RUN rm -rf /var/cache/apk/*
 
+RUN pecl install redis
+
+RUN docker-php-ext-enable redis
+
 EXPOSE 9000
 
 FROM base AS development
