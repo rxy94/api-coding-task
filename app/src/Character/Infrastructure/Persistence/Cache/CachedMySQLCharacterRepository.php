@@ -21,7 +21,7 @@ class CachedMySQLCharacterRepository implements CharacterRepository
     public function findById(int $id): ?Character
     {
         try {
-            $cachedCharacter = $this->redis->get($id);
+            $cachedCharacter = $this->redis->get("character:{$id}");
 
             if ($cachedCharacter) {
                 $this->logger->info('Personaje encontrado en caché', ['id' => $id]);
@@ -31,7 +31,7 @@ class CachedMySQLCharacterRepository implements CharacterRepository
             }
 
             $character = $this->mySQLCharacterRepository->findById($id);
-            $this->redis->set($id, serialize($character));
+            $this->redis->set("character:{$id}", serialize($character));
 
             return $character;
 
@@ -45,17 +45,16 @@ class CachedMySQLCharacterRepository implements CharacterRepository
     {
 
         try {
-            $cachedCharacters = $this->redis->get('all');
+            $cachedCharacters = $this->redis->get('character:all');
 
             if ($cachedCharacters) {
                 $this->logger->info('Obteniendo todos los personajes de la caché');
 
                 return unserialize($cachedCharacters);
-
             }
 
             $characters = $this->mySQLCharacterRepository->findAll();
-            $this->redis->set('all', serialize($characters));
+            $this->redis->set('character:all', serialize($characters));
 
             return $characters;
 
@@ -70,7 +69,7 @@ class CachedMySQLCharacterRepository implements CharacterRepository
         try {
             $savedCharacter = $this->mySQLCharacterRepository->save($character);
 
-            $this->redis->set($savedCharacter->getId(), serialize($savedCharacter));
+            $this->redis->set("character:{$savedCharacter->getId()}", serialize($savedCharacter));
 
             return $savedCharacter;
 
@@ -84,7 +83,7 @@ class CachedMySQLCharacterRepository implements CharacterRepository
     {
         try {
             $this->mySQLCharacterRepository->delete($character);
-            $this->redis->del($character->getId());
+            $this->redis->del("character:{$character->getId()}");
 
             return true;
 

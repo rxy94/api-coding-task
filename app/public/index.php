@@ -32,12 +32,13 @@ use App\Faction\Infrastructure\Persistence\Pdo\MySQLFactionRepository;
 
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\Service\EquipmentValidator;
+use App\Equipment\Application\ReadEquipmentUseCase;
 use App\Equipment\Application\CreateEquipmentUseCase;
 use App\Equipment\Infrastructure\Http\CreateEquipmentController;
 use App\Equipment\Infrastructure\Http\ReadEquipmentByIdController;
 use App\Equipment\Infrastructure\Http\ReadEquipmentController;
 use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentRepository;
-
+use App\Equipment\Infrastructure\Persistence\Cache\CachedMySQLEquipmentRepository;
 
 
 # Creamos el contenedor de dependencias
@@ -112,6 +113,14 @@ $containerBuilder->addDefinitions([
         );
     },
     EquipmentRepository::class => function (ContainerInterface $c) {
+        if ($_ENV['CACHE_ENABLED']) {
+            return new CachedMySQLEquipmentRepository(
+                new MySQLEquipmentRepository($c->get(PDO::class)),
+                $c->get(Redis::class),
+                $_ENV['DEBUG_MODE'] ? $c->get(LoggerInterface::class) : null
+            );
+        }
+
         return new MySQLEquipmentRepository(
             $c->get(PDO::class)
         );
@@ -120,6 +129,11 @@ $containerBuilder->addDefinitions([
         return new CreateEquipmentUseCase(
             $c->get(EquipmentRepository::class),
             $c->get(EquipmentValidator::class)
+        );
+    },
+    ReadEquipmentUseCase::class => function (ContainerInterface $c) {
+        return new ReadEquipmentUseCase(
+            $c->get(EquipmentRepository::class)
         );
     },
 ]);
