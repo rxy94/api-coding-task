@@ -72,6 +72,9 @@ class CachedMySQLFactionRepository implements FactionRepository
        
         $deleted = $this->mySQLFactionRepository->delete($faction);
         $this->redis->del($this->getKey($faction->getId()));
+        $this->redis->del($this->getKey('all'));
+
+        $this->logger->info('Facción eliminada de la caché', ['id' => $faction->getId()]);
 
         return $deleted;
 

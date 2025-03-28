@@ -20,6 +20,7 @@ use App\Character\Domain\Service\CharacterValidator;
 use App\Character\Infrastructure\Http\CreateCharacterController;
 use App\Character\Infrastructure\Http\ReadCharacterByIdController;
 use App\Character\Infrastructure\Http\ReadCharacterController;
+use App\Character\Infrastructure\Http\DeleteCharacterByIdController;
 use App\Character\Infrastructure\Persistence\Pdo\MySQLCharacterRepository;
 use App\Character\Infrastructure\Persistence\Cache\CachedMySQLCharacterRepository;
 
@@ -41,14 +42,15 @@ use App\Equipment\Infrastructure\Http\ReadEquipmentController;
 use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentRepository;
 use App\Equipment\Infrastructure\Persistence\Cache\CachedMySQLEquipmentRepository;
 
+use App\Character\Application\DeleteCharacterUseCase;
+use App\Equipment\Infrastructure\Http\DeleteEquipmentByIdController;
+use App\Faction\Infrastructure\Http\DeleteFactionByIdController;
 # Creamos el contenedor de dependencias
 $containerBuilder = new ContainerBuilder();
 
 # Cargamos las variables de entorno
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
-
-//dump($_ENV);
 
 # Añadimos las definiciones al contenedor
 $containerBuilder->addDefinitions([
@@ -89,6 +91,7 @@ $containerBuilder->addDefinitions([
 
         return new NullLogger();
     },
+    # Character
     CharacterRepository::class => function (ContainerInterface $c) {
         if ((bool) ((int) $_ENV['CACHE_ENABLED'])) {
             return new CachedMySQLCharacterRepository(
@@ -108,6 +111,7 @@ $containerBuilder->addDefinitions([
             $c->get(CharacterValidator::class)
         );
     },
+    # Faction
     FactionRepository::class => function (ContainerInterface $c) {
         if ((bool) ((int) $_ENV['CACHE_ENABLED'])) {
             return new CachedMySQLFactionRepository(
@@ -127,6 +131,7 @@ $containerBuilder->addDefinitions([
             $c->get(FactionValidator::class)
         );
     },
+    # Equipment
     EquipmentRepository::class => function (ContainerInterface $c) {
         if ((bool) ((int) $_ENV['CACHE_ENABLED'])) {
             return new CachedMySQLEquipmentRepository(
@@ -161,16 +166,19 @@ $app->addErrorMiddleware(true, true, true);
 $app->post('/characters', CreateCharacterController::class);
 $app->get('/charactersList', ReadCharacterController::class);
 $app->get('/characters/{id}', ReadCharacterByIdController::class);
+$app->delete('/characters/{id}', DeleteCharacterByIdController::class);
 
 # Rutas para facciones
 $app->post('/factions', CreateFactionController::class);
 $app->get('/factionsList', ReadFactionController::class);
 $app->get('/factions/{id}', ReadFactionByIdController::class);
+$app->delete('/factions/{id}', DeleteFactionByIdController::class);
 
 # Rutas para equipamientos
 $app->post('/equipments', CreateEquipmentController::class);
 $app->get('/equipmentsList', ReadEquipmentController::class);
 $app->get('/equipments/{id}', ReadEquipmentByIdController::class);
+$app->delete('/equipments/{id}', DeleteEquipmentByIdController::class);
 
 # Manejamos las rutas no encontradas
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Response $response) {

@@ -7,7 +7,6 @@ use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentRepository;
 use Psr\Log\LoggerInterface;
 use Redis;
-use Exception;
 
 class CachedMySQLEquipmentRepository implements EquipmentRepository
 {
@@ -73,7 +72,11 @@ class CachedMySQLEquipmentRepository implements EquipmentRepository
     {
        
         $this->mySQLEquipmentRepository->delete($equipment);
+        
         $this->redis->del($this->getKey($equipment->getId()));
+        $this->redis->del($this->getKey('all'));
+
+        $this->logger->info('Equipo eliminado de la caché', ['id' => $equipment->getId()]);
 
         return true;
 
