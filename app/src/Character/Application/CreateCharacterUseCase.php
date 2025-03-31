@@ -16,26 +16,30 @@ class CreateCharacterUseCase
     }
 
     public function execute(
-        string $name,
-        string $birthDate,
-        string $kingdom,
-        int $equipmentId,
-        int $factionId,
-    ): Character {
+        CreateCharacterUseCaseRequest $request
+    ): CreateCharacterUseCaseResponse {
         
         # Validamos los datos
-        $this->validator->validate($name, $birthDate, $kingdom, $equipmentId, $factionId);
+        $this->validator->validate(
+            $request->getName(), 
+            $request->getBirthDate(), 
+            $request->getKingdom(), 
+            $request->getEquipmentId(), 
+            $request->getFactionId()
+        );
         
         # Creamos el personaje
         $character = CharacterFactory::build(
-            $name,
-            $birthDate,
-            $kingdom,
-            $equipmentId,
-            $factionId
+            $request->getName(),
+            $request->getBirthDate(),
+            $request->getKingdom(),
+            $request->getEquipmentId(),
+            $request->getFactionId()
         );
         
         # Guardamos el personaje
-        return $this->repository->save($character);
+        $this->repository->save($character);
+
+        return new CreateCharacterUseCaseResponse($character);
     }
 }

@@ -166,19 +166,19 @@ $app->addErrorMiddleware(true, true, true);
 $app->post('/characters', CreateCharacterController::class);
 $app->get('/charactersList', ReadCharacterController::class);
 $app->get('/characters/{id}', ReadCharacterByIdController::class);
-$app->delete('/characters/{id}', DeleteCharacterByIdController::class);
+$app->delete('/deleteCharacter/{id}', DeleteCharacterByIdController::class);
 
 # Rutas para facciones
 $app->post('/factions', CreateFactionController::class);
 $app->get('/factionsList', ReadFactionController::class);
 $app->get('/factions/{id}', ReadFactionByIdController::class);
-$app->delete('/factions/{id}', DeleteFactionByIdController::class);
+$app->delete('/deleteFaction/{id}', DeleteFactionByIdController::class);
 
 # Rutas para equipamientos
 $app->post('/equipments', CreateEquipmentController::class);
 $app->get('/equipmentsList', ReadEquipmentController::class);
 $app->get('/equipments/{id}', ReadEquipmentByIdController::class);
-$app->delete('/equipments/{id}', DeleteEquipmentByIdController::class);
+$app->delete('/deleteEquipment/{id}', DeleteEquipmentByIdController::class);
 
 # Manejamos las rutas no encontradas
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Response $response) {
