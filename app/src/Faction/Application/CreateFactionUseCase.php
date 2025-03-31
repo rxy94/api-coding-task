@@ -16,21 +16,25 @@ class CreateFactionUseCase
     }
 
     public function execute(
-        string $faction_name,
-        string $description
-    ): Faction {
+        CreateFactionUseCaseRequest $request
+    ): CreateFactionUseCaseResponse {
         
         # Validamos datos
-        $this->validator->validate($faction_name, $description);
+        $this->validator->validate(
+            $request->getFactionName(),
+            $request->getDescription()
+        );
 
         # Creamos la facción
         $faction = FactionFactory::build(
-            $faction_name, 
-            $description
+            $request->getFactionName(), 
+            $request->getDescription()
         );
 
         # Guardamos la facción
-        return $this->repository->save($faction);
+        $this->repository->save($faction);
+
+        return new CreateFactionUseCaseResponse($faction);
 
     }
     
