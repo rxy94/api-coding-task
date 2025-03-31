@@ -15,31 +15,29 @@ class CreateEquipmentUseCase
     )
     {
     }
-
-    /**
-     * 
-     * @param string $name
-     * @param string $type
-     * @param string $made_by
-     * @return Equipment
-     */     
+    
     public function execute(
-        string $name, 
-        string $type, 
-        string $made_by
-    ): Equipment {
+        CreateEquipmentUseCaseRequest $request
+    ): CreateEquipmentUseCaseResponse {
 
         # Validamos los datos
-        $this->equipmentValidator->validate($name, $type, $made_by);
+        $this->equipmentValidator->validate(
+            $request->getName(), 
+            $request->getType(), 
+            $request->getMadeBy()
+        );
 
         $equipment = EquipmentFactory::build(
-            $name,
-            $type,
-            $made_by
+            $request->getName(),
+            $request->getType(),
+            $request->getMadeBy()
         );
 
         # Guardamos el equipamiento
-        return $this->equipmentRepository->save($equipment);
+        $this->equipmentRepository->save($equipment);
+
+        return new CreateEquipmentUseCaseResponse($equipment);
+        
     }
 
 }
