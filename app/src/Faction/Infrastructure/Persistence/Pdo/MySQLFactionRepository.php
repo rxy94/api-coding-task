@@ -7,6 +7,7 @@ use App\Faction\Domain\FactionRepository;
 use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
 use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionsNotFoundException;
 use App\Faction\Infrastructure\Persistence\Pdo\MySQLFactionFactory;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
 use PDO;
@@ -110,10 +111,17 @@ class MySQLFactionRepository implements FactionRepository
         if (null === $faction->getId()) {
             throw FactionNotFoundException::build();
         }
-
+ 
         $sql = 'DELETE FROM factions WHERE id = :id';
         $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute(['id' => $faction->getId()]);
+        $result = $stmt->execute(['id' => $faction->getId()]);
+
+        if (!$result) {
+            throw RowDeletionFailedException::build();
+        }
+
+        return $result;
+        
     }
 
 }

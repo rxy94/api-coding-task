@@ -6,6 +6,7 @@ use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentNotFoundException;
 use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentsNotFoundException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
 use PDO;
@@ -111,7 +112,14 @@ class MySQLEquipmentRepository implements EquipmentRepository
 
         $sql = 'DELETE FROM equipments WHERE id = :id';
         $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute(['id' => $equipment->getId()]);
+        $result = $stmt->execute(['id' => $equipment->getId()]);
+
+        if (!$result) {
+            throw RowDeletionFailedException::build();
+        }
+
+        return $result;
+
     }
     
 }

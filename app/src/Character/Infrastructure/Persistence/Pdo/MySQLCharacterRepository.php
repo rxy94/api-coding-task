@@ -6,6 +6,7 @@ use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Infrastructure\Persistence\Pdo\Exception\CharacterNotFoundException;
 use App\Character\Infrastructure\Persistence\Pdo\Exception\CharactersNotFoundException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
 use PDO;
@@ -117,7 +118,14 @@ class MySQLCharacterRepository implements CharacterRepository
 
         $sql = 'DELETE FROM characters WHERE id = :id';
         $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute(['id' => $character->getId()]);
+        $result = $stmt->execute(['id' => $character->getId()]);
+
+        if (!$result) {
+            throw RowDeletionFailedException::build();
+        }
+
+        return $result;
+
     }
 
 }
