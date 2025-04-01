@@ -59,3 +59,29 @@ composer-require: ## Añade nuevas dependencias de producción
 
 composer-require-dev: ## Añade nuevas dependencias de desarrollo
 	docker run --rm -ti -v ${PWD}/app:/app -w /app $(IMAGE_NAME):$(IMAGE_TAG_DEV) composer require --dev --verbose
+
+dot-env: ## Copia el archivo .env.dist a .env
+	@if [ ! -f app/.env ]; then \
+		cp app/.env.dist app/.env; \
+		echo "Archivo .env creado con éxito"; \
+	else \
+		echo "Archivo .env ya existe"; \
+	fi
+
+test: ## Ejecuta los tests
+	docker compose exec php vendor/bin/phpunit --colors=always test
+
+test-unit: ## Ejecuta los tests unitarios
+	docker compose exec php vendor/bin/phpunit --colors=always test --group unit
+
+test-acceptance: ## Ejecuta los tests de aceptación
+	docker compose exec php vendor/bin/phpunit --colors=always test --group acceptance
+
+test-integration: ## Ejecuta los tests de integración
+	docker compose exec php vendor/bin/phpunit --colors=always test --group integration
+
+test-group-%: ## Ejecuta los tests de un grupo
+	docker compose exec php vendor/bin/phpunit --colors=always test --group $*
+
+test-coverage: ## Ejecuta los tests de cobertura
+	docker compose exec php vendor/bin/phpunit --colors=always test --coverage-html test/coverage
