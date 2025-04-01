@@ -16,8 +16,10 @@ use Monolog\Logger;
 
 use App\Character\Domain\CharacterRepository;
 use App\Character\Application\CreateCharacterUseCase;
+use App\Character\Application\UpdateCharacterUseCase;
 use App\Character\Domain\Service\CharacterValidator;
 use App\Character\Infrastructure\Http\CreateCharacterController;
+use App\Character\Infrastructure\Http\UpdateCharacterController;
 use App\Character\Infrastructure\Http\ReadCharacterByIdController;
 use App\Character\Infrastructure\Http\ReadCharacterController;
 use App\Character\Infrastructure\Http\DeleteCharacterByIdController;
@@ -45,6 +47,8 @@ use App\Equipment\Infrastructure\Persistence\Cache\CachedMySQLEquipmentRepositor
 use App\Character\Application\DeleteCharacterUseCase;
 use App\Equipment\Infrastructure\Http\DeleteEquipmentByIdController;
 use App\Faction\Infrastructure\Http\DeleteFactionByIdController;
+use Slim\Middleware\BodyParsingMiddleware;
+
 # Creamos el contenedor de dependencias
 $containerBuilder = new ContainerBuilder();
 
@@ -111,6 +115,12 @@ $containerBuilder->addDefinitions([
             $c->get(CharacterValidator::class)
         );
     },
+    UpdateCharacterUseCase::class => function (ContainerInterface $c) {
+        return new UpdateCharacterUseCase(
+            $c->get(CharacterRepository::class),
+            $c->get(CharacterValidator::class)
+        );
+    },
     # Faction
     FactionRepository::class => function (ContainerInterface $c) {
         if ((bool) ((int) $_ENV['CACHE_ENABLED'])) {
@@ -162,11 +172,16 @@ $app = AppFactory::createFromContainer($container);
 # Middleware para manejar excepciones
 $app->addErrorMiddleware(true, true, true);
 
+# Middleware para parsear el cuerpo de la petición
+$app->addBodyParsingMiddleware();
+//$app->add(new BodyParsingMiddleware());
+
 # Rutas para personajes
-$app->post('/characters', CreateCharacterController::class);
-$app->get('/charactersList', ReadCharacterController::class);
-$app->get('/characters/{id}', ReadCharacterByIdController::class);
-$app->delete('/deleteCharacter/{id}', DeleteCharacterByIdController::class);
+$app->get('/characters', ReadCharacterController::class);
+$app->get('/character/{id}', ReadCharacterByIdController::class);
+$app->post('/character', CreateCharacterController::class);
+$app->put('/character/{id}', UpdateCharacterController::class);
+$app->delete('/character/{id}', DeleteCharacterByIdController::class);
 
 # Rutas para facciones
 $app->post('/factions', CreateFactionController::class);

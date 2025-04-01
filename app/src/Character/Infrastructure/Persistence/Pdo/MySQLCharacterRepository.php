@@ -99,9 +99,14 @@ class MySQLCharacterRepository implements CharacterRepository
                 WHERE id = :id';
         
         $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute(
-            MySQLCharacterToArrayTransformer::transform($character)
-        );
+        $result = $stmt->execute([
+            'name'         => $character->getName(),
+            'birth_date'   => $character->getBirthDate(),
+            'kingdom'      => $character->getKingdom(),
+            'equipment_id' => $character->getEquipmentId(),
+            'faction_id'   => $character->getFactionId(),
+            'id'           => $character->getId(),
+        ]);
 
         if (!$result) {
             throw RowUpdateFailedException::build();
