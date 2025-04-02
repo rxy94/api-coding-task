@@ -5,8 +5,10 @@ namespace App\Test\Character\Application;
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterNotFoundException;
+use App\Character\Domain\Exception\CharacterValidationException;
 use App\Character\Application\ReadCharacterByIdUseCase;
 use App\Character\Infrastructure\InMemory\ArrayCharacterRepository;
+use App\Character\Domain\Service\CharacterValidator;
 
 use PHPUnit\Framework\TestCase;
 
@@ -29,7 +31,8 @@ class ReadCharacterUseCaseTest extends TestCase
                     1,
                     1,
                 ),
-            ])
+            ]),
+            new CharacterValidator()
         );
 
         $character = $sut->execute(1);
@@ -61,7 +64,8 @@ class ReadCharacterUseCaseTest extends TestCase
     public function givenARepositoryWithNonExistingCharacterIdWhenReadCharacterThenExceptionShouldBeRaised()
     {
         $sut = new ReadCharacterByIdUseCase(
-            $this->mockCharacterRepository([])
+            $this->mockCharacterRepository([]),
+            new CharacterValidator()
         );
 
         $this->expectException(CharacterNotFoundException::class);
@@ -69,4 +73,31 @@ class ReadCharacterUseCaseTest extends TestCase
         $sut->execute(1);
     }
 
+     /**
+     * @test
+     * @group unhappy-path
+     * @group unit
+     * @group validation
+     */
+    public function givenInvalidCharacterDataWhenReadCharacterThenValidationExceptionShouldBeRaised()
+    {
+        $sut = new ReadCharacterByIdUseCase(
+            $this->mockCharacterRepository([
+                new Character(
+                    '', // Nombre vacío
+                    '1990-01-01',
+                    'Kingdom of Spain',
+                    1,
+                    1,
+                    1,
+                ),
+            ]),
+            new CharacterValidator()
+        );
+
+        $this->expectException(CharacterValidationException::class);
+        $this->expectExceptionMessageMatches('/^El nombre es requerido$/');
+
+        $sut->execute(1);
+    }
 }

@@ -27,6 +27,8 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
 
+use App\Character\Application\ReadCharacterByIdUseCase;
+
 # Definimos las dependencias del contenedor
 return function (ContainerBuilder $containerBuilder) {
 
@@ -76,6 +78,12 @@ return function (ContainerBuilder $containerBuilder) {
         },
         CreateCharacterUseCase::class => function (ContainerInterface $c) {
             return new CreateCharacterUseCase(
+                $c->get(CharacterRepository::class),
+                $c->get(CharacterValidator::class)
+            );
+        },
+        ReadCharacterByIdUseCase::class => function (ContainerInterface $c) {
+            return new ReadCharacterByIdUseCase(
                 $c->get(CharacterRepository::class),
                 $c->get(CharacterValidator::class)
             );
