@@ -4,9 +4,20 @@
          bootstrap="vendor/autoload.php"
          colors="true"
          cacheDirectory=".phpunit.cache">
-    <source>
+    <coverage>
         <include>
             <directory suffix=".php">./src</directory>
         </include>
-    </source>
+        <exclude>
+            <directory suffix=".php">./test</directory>
+        </exclude>
+        <report>
+            <html outputDirectory="../../coverage"/>
+        </report>
+    </coverage>
+    <testsuites>
+        <testsuite name="Project Test Suite">
+            <directory>test</directory>
+        </testsuite>
+    </testsuites>
 </phpunit>
