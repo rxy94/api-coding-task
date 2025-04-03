@@ -10,6 +10,7 @@ class CreateCharacterUseCaseRequest
         private readonly string $kingdom,
         private readonly int $equipmentId,
         private readonly int $factionId,
+        private readonly ?int $id = null
     ) {
     }
 
@@ -36,5 +37,10 @@ class CreateCharacterUseCaseRequest
     public function getFactionId(): int
     {
         return $this->factionId;
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Character\Infrastructure\InMemory;
 
 use App\Character\Domain\Character;
+use App\Character\Domain\CharacterFactory;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterNotFoundException;
 
@@ -24,9 +25,25 @@ class ArrayCharacterRepository implements CharacterRepository
 
     public function save(Character $character): Character
     {
-        $this->characters[$character->getId()] = $character;
+        if (null !== $character->getId()) {
+            $this->characters[$character->getId()] = $character;
+
+            return $character;
+        }
+
+        $character = CharacterFactory::build(
+            $character->getName(),
+            $character->getBirthDate(),
+            $character->getKingdom(),
+            $character->getEquipmentId(),
+            $character->getFactionId(),
+            count($this->characters) + 1
+        );
+
+        $this->characters[] = $character;
 
         return $character;
+
     }
 
     public function findAll(): array

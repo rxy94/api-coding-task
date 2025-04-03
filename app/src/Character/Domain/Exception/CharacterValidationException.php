@@ -5,16 +5,23 @@ namespace App\Character\Domain\Exception;
 class CharacterValidationException extends \DomainException
 {
     private const MESSAGE = "Error de validación del personaje";
-    private const NAME_ERROR = "El nombre es requerido";
+
+    private const NAME_REQUIRED = "El nombre es requerido";
     private const NAME_LENGTH_ERROR = "El nombre no puede exceder los 100 caracteres";
-    private const BIRTH_DATE_ERROR = "La fecha de nacimiento es requerida";
+
+    private const BIRTH_DATE_REQUIRED = "La fecha de nacimiento es requerida";
     private const BIRTH_DATE_FORMAT_ERROR = "La fecha de nacimiento debe tener el formato YYYY-MM-DD";
-    private const KINGDOM_ERROR = "El reino es requerido";
+
+    private const KINGDOM_REQUIRED = "El reino es requerido";
     private const KINGDOM_LENGTH_ERROR = "El reino no puede exceder los 100 caracteres";
-    private const EQUIPMENT_ID_ERROR = "El ID del equipamiento debe ser un número positivo";
-    private const EQUIPMENT_ID_TYPE_ERROR = "El ID del equipamiento debe ser un número entero";
-    private const FACTION_ID_ERROR = "El ID de la facción debe ser un número positivo";
-    private const FACTION_ID_TYPE_ERROR = "El ID de la facción debe ser un número entero";
+
+    private const EQUIPMENT_ID_NON_POSITIVE = "El ID del equipamiento debe ser un número positivo mayor que 0";
+    private const EQUIPMENT_ID_REQUIRED = "El ID del equipamiento es requerido";
+
+    private const FACTION_ID_NON_POSITIVE = "El ID de la facción debe ser un número positivo mayor que 0";
+    private const FACTION_ID_REQUIRED = "El ID de la facción es requerido";
+
+    private const ID_NON_POSITIVE = 'El ID debe ser un número positivo mayor que 0';
 
     # Patrones de diseño: Constructor Semántico
 
@@ -23,9 +30,9 @@ class CharacterValidationException extends \DomainException
         parent::__construct($message);
     }
 
-    public static function withNameError(): static
+    public static function withNameRequired(): static
     {
-        return new static(self::NAME_ERROR);
+        return new static(self::NAME_REQUIRED);
     }
 
     public static function withNameLengthError(): static
@@ -33,9 +40,9 @@ class CharacterValidationException extends \DomainException
         return new static(self::NAME_LENGTH_ERROR);
     }
 
-    public static function withBirthDateError(): static
+    public static function withBirthDateRequired(): static
     {
-        return new static(self::BIRTH_DATE_ERROR);
+        return new static(self::BIRTH_DATE_REQUIRED);
     }
 
     public static function withBirthDateFormatError(): static
@@ -43,9 +50,9 @@ class CharacterValidationException extends \DomainException
         return new static(self::BIRTH_DATE_FORMAT_ERROR);
     }
 
-    public static function withKingdomError(): static
+    public static function withKingdomRequired(): static
     {
-        return new static(self::KINGDOM_ERROR);
+        return new static(self::KINGDOM_REQUIRED);
     }
 
     public static function withKingdomLengthError(): static
@@ -53,24 +60,29 @@ class CharacterValidationException extends \DomainException
         return new static(self::KINGDOM_LENGTH_ERROR);
     }
 
-    public static function withEquipmentIdError(): static
+    public static function withEquipmentIdRequired(): static
     {
-        return new static(self::EQUIPMENT_ID_ERROR);
+        return new static(self::EQUIPMENT_ID_REQUIRED);
     }
 
-    public static function withEquipmentIdTypeError(): static
+    public static function withEquipmentIdNonPositive(): static
     {
-        return new static(self::EQUIPMENT_ID_TYPE_ERROR);
+        return new static(self::EQUIPMENT_ID_NON_POSITIVE);
     }
 
-    public static function withFactionIdError(): static
+    public static function withFactionIdRequired(): static
     {
-        return new static(self::FACTION_ID_ERROR);
+        return new static(self::FACTION_ID_REQUIRED);
     }
 
-    public static function withFactionIdTypeError(): static
+    public static function withFactionIdNonPositive(): static
     {
-        return new static(self::FACTION_ID_TYPE_ERROR);
+        return new static(self::FACTION_ID_NON_POSITIVE);
+    }
+
+    public static function withIdNonPositive(): static
+    {
+        return new static(self::ID_NON_POSITIVE);
     }
 
 } 

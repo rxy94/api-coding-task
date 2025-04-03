@@ -18,6 +18,7 @@ class ReadCharacterUseCaseTest extends TestCase
      * @test
      * @group happy-path
      * @group unit
+     * @group read-character
      */
     public function givenARepositoryWithOneCharacterIdWhenReadCharacterThenReturnTheCharacter()
     {
@@ -32,7 +33,6 @@ class ReadCharacterUseCaseTest extends TestCase
                     1,
                 ),
             ]),
-            new CharacterValidator()
         );
 
         $character = $sut->execute(1);
@@ -60,12 +60,12 @@ class ReadCharacterUseCaseTest extends TestCase
      * @test
      * @group unhappy-path
      * @group unit
+     * @group read-character
      */
     public function givenARepositoryWithNonExistingCharacterIdWhenReadCharacterThenExceptionShouldBeRaised()
     {
         $sut = new ReadCharacterByIdUseCase(
             $this->mockCharacterRepository([]),
-            new CharacterValidator()
         );
 
         $this->expectException(CharacterNotFoundException::class);
@@ -73,31 +73,4 @@ class ReadCharacterUseCaseTest extends TestCase
         $sut->execute(1);
     }
 
-     /**
-     * @test
-     * @group unhappy-path
-     * @group unit
-     * @group validation
-     */
-    public function givenInvalidCharacterDataWhenReadCharacterThenValidationExceptionShouldBeRaised()
-    {
-        $sut = new ReadCharacterByIdUseCase(
-            $this->mockCharacterRepository([
-                new Character(
-                    '', // Nombre vacío
-                    '1990-01-01',
-                    'Kingdom of Spain',
-                    1,
-                    1,
-                    1,
-                ),
-            ]),
-            new CharacterValidator()
-        );
-
-        $this->expectException(CharacterValidationException::class);
-        $this->expectExceptionMessageMatches('/^El nombre es requerido$/');
-
-        $sut->execute(1);
-    }
 }
