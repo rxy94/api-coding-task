@@ -79,19 +79,16 @@ return function (ContainerBuilder $containerBuilder) {
         CreateCharacterUseCase::class => function (ContainerInterface $c) {
             return new CreateCharacterUseCase(
                 $c->get(CharacterRepository::class),
-                $c->get(CharacterValidator::class)
             );
         },
         ReadCharacterByIdUseCase::class => function (ContainerInterface $c) {
             return new ReadCharacterByIdUseCase(
                 $c->get(CharacterRepository::class),
-                $c->get(CharacterValidator::class)
             );
         },
         UpdateCharacterUseCase::class => function (ContainerInterface $c) {
             return new UpdateCharacterUseCase(
                 $c->get(CharacterRepository::class),
-                $c->get(CharacterValidator::class)
             );
         },
         # Faction

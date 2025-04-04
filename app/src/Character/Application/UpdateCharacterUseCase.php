@@ -3,15 +3,13 @@
 namespace App\Character\Application;
 
 use App\Character\Domain\Character;
-use App\Character\Domain\CharacterFactory;
 use App\Character\Domain\CharacterRepository;
-use App\Character\Domain\Service\CharacterValidator;
+use App\Character\Infrastructure\Persistence\Pdo\Exception\CharacterNotFoundException;
 
 class UpdateCharacterUseCase
 {
     public function __construct(
         private CharacterRepository $repository,
-        private CharacterValidator $validator
     ) {
     }
 
@@ -22,7 +20,7 @@ class UpdateCharacterUseCase
         $oldcharacter = $this->repository->findById($request->getId());
 
         if (!$oldcharacter) {
-            throw new \Exception('Character not found');
+            throw CharacterNotFoundException::build();
         }
 
         $updatedcharacter = new Character(
