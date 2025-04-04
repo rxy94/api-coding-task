@@ -25,7 +25,7 @@ class ReadCharacterUseCaseTest extends TestCase
     {
         $sut = new ReadCharacterByIdUseCase(
             $this->mockCharacterRepository([
-                new Character(
+                new Character( //Se puede usar el characterFactory para crear un character
                     'John Doe',
                     '1990-01-01',
                     'Kingdom of Spain',

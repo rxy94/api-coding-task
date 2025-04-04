@@ -58,13 +58,15 @@ class CreateCharacterUseCaseTest extends TestCase
      */
     public function givenARequestWithInvalidDataWhenCreateCharacterThenReturnError(
         CreateCharacterUseCaseRequest $request,
-        DomainException $expectedException
+        DomainException $expectedException, 
+        string $expectedErrorMessage
     ) {
         $sut = new CreateCharacterUseCase(
             $this->mockCharacterRepository([])
         );
 
         $this->expectException($expectedException::class);
+        $this->expectExceptionMessage($expectedErrorMessage);
         $sut->execute($request);
     }
 
@@ -74,46 +76,57 @@ class CreateCharacterUseCaseTest extends TestCase
             'invalid name' => [
                 CreateCharacterUseCaseRequestMotherObject::withInvalidName(),
                 CharacterValidationException::withNameRequired(),
+                CharacterValidationException::withNameRequired()->getMessage(),
             ],
             'invalid length name' => [
                 CreateCharacterUseCaseRequestMotherObject::withInvalidLengthName(),
                 CharacterValidationException::withNameLengthError(),
+                CharacterValidationException::withNameLengthError()->getMessage(),
             ],
             'invalid birth date' => [
                 CreateCharacterUseCaseRequestMotherObject::withInvalidBirthDate(),
                 CharacterValidationException::withBirthDateRequired(),
+                CharacterValidationException::withBirthDateRequired()->getMessage(),
             ],
             'invalid birth date format' => [
                 CreateCharacterUseCaseRequestMotherObject::withInvalidFormatBirthDate(),
                 CharacterValidationException::withBirthDateFormatError(),
+                CharacterValidationException::withBirthDateFormatError()->getMessage(),
             ],
             'invalid kingdom' => [
                 CreateCharacterUseCaseRequestMotherObject::withInvalidKingdom(),
                 CharacterValidationException::withKingdomRequired(),
+                CharacterValidationException::withKingdomRequired()->getMessage(),
             ],
             'invalid kingdom length' => [
                 CreateCharacterUseCaseRequestMotherObject::withInvalidLengthKingdom(),
                 CharacterValidationException::withKingdomLengthError(),
+                CharacterValidationException::withKingdomLengthError()->getMessage(),
             ],
             'invalid equipment ID' => [
                 CreateCharacterUseCaseRequestMotherObject::withRequiredEquipmentId(),
                 CharacterValidationException::withEquipmentIdRequired(),
+                CharacterValidationException::withEquipmentIdRequired()->getMessage(),
             ],
             'invalid equipment ID non positive' => [
                 CreateCharacterUseCaseRequestMotherObject::withInvalidEquipmentId(),
                 CharacterValidationException::withEquipmentIdNonPositive(),
+                CharacterValidationException::withEquipmentIdNonPositive()->getMessage(),
             ],
             'invalid faction ID' => [
                 CreateCharacterUseCaseRequestMotherObject::withRequiredFactionId(),
                 CharacterValidationException::withFactionIdRequired(),
+                CharacterValidationException::withFactionIdRequired()->getMessage(),
             ],
             'invalid faction ID non positive' => [
                 CreateCharacterUseCaseRequestMotherObject::withInvalidFactionId(),
                 CharacterValidationException::withFactionIdNonPositive(),
+                CharacterValidationException::withFactionIdNonPositive()->getMessage(),
             ],
             'invalid ID' => [
                 CreateCharacterUseCaseRequestMotherObject::withInvalidId(),
                 CharacterValidationException::withIdNonPositive(),
+                CharacterValidationException::withIdNonPositive()->getMessage(),
             ],
         ];
     }
