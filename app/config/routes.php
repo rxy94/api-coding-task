@@ -24,7 +24,7 @@ return function (App $app) {
     $app->get('/characters', ReadCharacterController::class);
     $app->get('/character/{id}', ReadCharacterByIdController::class);
     $app->post('/character', CreateCharacterController::class);
-    $app->put('/character/{id}', UpdateCharacterController::class);
+    $app->post('/character/{id}', UpdateCharacterController::class);
     $app->delete('/character/{id}', DeleteCharacterByIdController::class);
 
     # Rutas para facciones

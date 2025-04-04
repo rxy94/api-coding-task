@@ -21,8 +21,6 @@ class UpdateCharacterController
         # Obtenemos los datos del cuerpo de la petición
         // HACERLO CON JSON
         $data = $request->getParsedBody();
-        dump($data);
-        die();
 
         $requiredFields = ['name', 'birth_date', 'kingdom', 'equipment_id', 'faction_id'];
         foreach ($requiredFields as $field){
