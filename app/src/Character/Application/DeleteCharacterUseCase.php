@@ -3,6 +3,7 @@
 namespace App\Character\Application;
 
 use App\Character\Domain\CharacterRepository;
+use App\Character\Domain\Exception\CharacterNotFoundException;
 
 class DeleteCharacterUseCase
 {
@@ -15,7 +16,7 @@ class DeleteCharacterUseCase
         $character = $this->repository->findById($id);
 
         if (!$character) {
-            throw new \Exception("Personaje no encontrado con ID: {$id}");
+            throw CharacterNotFoundException::build();
         }
 
         $this->repository->delete($character);

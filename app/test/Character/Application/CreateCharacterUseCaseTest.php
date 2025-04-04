@@ -17,7 +17,8 @@ class CreateCharacterUseCaseTest extends TestCase
      * @test
      * @group happy-path
      * @group unit
-     * @group ruyi
+     * @group character
+     * @group create-character
      */
     public function givenARequestWithValidDataWhenCreateCharacterThenReturnSuccess()
     {
@@ -51,7 +52,8 @@ class CreateCharacterUseCaseTest extends TestCase
      * @test
      * @group unhappy-path
      * @group unit
-     * @group ruyi
+     * @group character
+     * @group validation
      * @dataProvider invalidDataProvider
      */
     public function givenARequestWithInvalidDataWhenCreateCharacterThenReturnError(

@@ -17,7 +17,8 @@ class ArrayCharacterRepository implements CharacterRepository
     public function findById(int $id): ?Character
     {
         if (!isset($this->characters[$id])) {
-            throw CharacterNotFoundException::build();
+            //throw CharacterNotFoundException::build();
+            return null;
         }
 
         return $this->characters[$id];
@@ -40,10 +41,10 @@ class ArrayCharacterRepository implements CharacterRepository
             count($this->characters) + 1
         );
 
-        $this->characters[] = $character;
+        //$this->characters[] = $character;
+        $this->characters[$character->getId()] = $character;
 
         return $character;
-
     }
 
     public function findAll(): array
