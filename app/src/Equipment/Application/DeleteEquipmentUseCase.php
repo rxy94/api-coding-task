@@ -3,11 +3,13 @@
 namespace App\Equipment\Application;
 
 use App\Equipment\Domain\EquipmentRepository;
+use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentNotFoundException;
 
 class DeleteEquipmentUseCase
 {
-    public function __construct(private EquipmentRepository $repository)
-    {
+    public function __construct(
+        private EquipmentRepository $repository
+    ) {
     }
 
     public function execute(int $id): void
@@ -15,7 +17,7 @@ class DeleteEquipmentUseCase
         $equipment = $this->repository->findById($id);
 
         if (!$equipment) {
-            throw new \Exception("Equipo no encontrado con ID: {$id}");
+            throw EquipmentNotFoundException::build();
         }
 
         $this->repository->delete($equipment);

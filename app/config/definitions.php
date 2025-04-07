@@ -128,7 +128,6 @@ return function (ContainerBuilder $containerBuilder) {
         CreateEquipmentUseCase::class => function (ContainerInterface $c) {
             return new CreateEquipmentUseCase(
                 $c->get(EquipmentRepository::class),
-                $c->get(EquipmentValidator::class)
             );
         },
     ]);

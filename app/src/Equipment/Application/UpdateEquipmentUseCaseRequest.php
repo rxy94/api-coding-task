@@ -2,14 +2,19 @@
 
 namespace App\Equipment\Application;
 
-class CreateEquipmentUseCaseRequest
+class UpdateEquipmentUseCaseRequest
 {
     public function __construct(
+        private readonly int $id,
         private readonly string $name,
         private readonly string $type,
-        private readonly string $made_by,
-        private readonly ?int $id = null
+        private readonly string $madeBy,
     ) {
+    }
+
+    public function getId(): int
+    {
+        return $this->id;
     }
 
     public function getName(): string
@@ -24,12 +29,7 @@ class CreateEquipmentUseCaseRequest
 
     public function getMadeBy(): string
     {
-        return $this->made_by;
+        return $this->madeBy;
     }
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
-    
-}
+} 
+ 

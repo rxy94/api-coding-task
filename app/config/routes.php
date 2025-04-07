@@ -9,6 +9,7 @@ use App\Equipment\Infrastructure\Http\CreateEquipmentController;
 use App\Equipment\Infrastructure\Http\DeleteEquipmentByIdController;
 use App\Equipment\Infrastructure\Http\ReadEquipmentByIdController;
 use App\Equipment\Infrastructure\Http\ReadEquipmentController;
+use App\Equipment\Infrastructure\Http\UpdateEquipmentController;
 use App\Faction\Infrastructure\Http\CreateFactionController;
 use App\Faction\Infrastructure\Http\DeleteFactionByIdController;
 use App\Faction\Infrastructure\Http\ReadFactionByIdController;
@@ -37,7 +38,8 @@ return function (App $app) {
     $app->get('/equipments', ReadEquipmentController::class);
     $app->get('/equipments/{id}', ReadEquipmentByIdController::class);
     $app->post('/equipment', CreateEquipmentController::class);
-    $app->delete('/deleteEquipment/{id}', DeleteEquipmentByIdController::class);
+    $app->put('/equipment/{id}', UpdateEquipmentController::class);
+    $app->delete('/equipment/{id}', DeleteEquipmentByIdController::class);
 
     # Manejamos las rutas no encontradas
     $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {
