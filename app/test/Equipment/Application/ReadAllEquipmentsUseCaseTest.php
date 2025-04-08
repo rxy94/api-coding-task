@@ -2,8 +2,8 @@
 
 namespace App\Test\Equipment\Application;
 
-use App\Equipment\Application\ReadEquipmentUseCase;
 use App\Equipment\Domain\Equipment;
+use App\Equipment\Application\ReadEquipmentUseCase;
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Infrastructure\InMemory\ArrayEquipmentRepository;
 

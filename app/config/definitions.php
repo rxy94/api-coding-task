@@ -3,19 +3,16 @@
 use App\Character\Application\CreateCharacterUseCase;
 use App\Character\Application\UpdateCharacterUseCase;
 use App\Character\Domain\CharacterRepository;
-use App\Character\Domain\Service\CharacterValidator;
 use App\Character\Infrastructure\Persistence\Cache\CachedMySQLCharacterRepository;
 use App\Character\Infrastructure\Persistence\Pdo\MySQLCharacterRepository;
 
 use App\Equipment\Application\CreateEquipmentUseCase;
 use App\Equipment\Domain\EquipmentRepository;
-use App\Equipment\Domain\Service\EquipmentValidator;
 use App\Equipment\Infrastructure\Persistence\Cache\CachedMySQLEquipmentRepository;
 use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentRepository;
 
 use App\Faction\Application\CreateFactionUseCase;
 use App\Faction\Domain\FactionRepository;
-use App\Faction\Domain\Service\FactionValidator;
 use App\Faction\Infrastructure\Persistence\Cache\CachedMySQLFactionRepository;
 use App\Faction\Infrastructure\Persistence\Pdo\MySQLFactionRepository;
 
@@ -107,8 +104,7 @@ return function (ContainerBuilder $containerBuilder) {
         },
         CreateFactionUseCase::class => function (ContainerInterface $c) {
             return new CreateFactionUseCase(
-                $c->get(FactionRepository::class),
-                $c->get(FactionValidator::class)
+                $c->get(FactionRepository::class)
             );
         },
         # Equipment

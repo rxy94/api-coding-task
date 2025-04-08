@@ -41,7 +41,7 @@ class DeleteCharacterControllerTest extends TestCase
         $characterId = $savedCharacter->getId();
 
         // Crear una solicitud para eliminar el personaje
-        $request = $this->createRequest('DELETE', '/character/' . $characterId);
+        $request = $this->createRequest('DELETE', '/characters/' . $characterId);
         
         // Procesar la solicitud
         $response = $app->handle($request);
@@ -78,7 +78,7 @@ class DeleteCharacterControllerTest extends TestCase
         $nonExistentId = 999;
         
         // Crear una solicitud para eliminar el personaje
-        $request = $this->createRequest('DELETE', '/character/' . $nonExistentId);
+        $request = $this->createRequest('DELETE', '/characters/' . $nonExistentId);
         
         // Procesar la solicitud
         $response = $app->handle($request);

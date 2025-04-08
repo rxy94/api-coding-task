@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Test\Equipment\Infrastructure\Http;
+namespace App\Test\Faction\Infrastructure\Http;
 
-use App\Equipment\Domain\Equipment;
-use App\Equipment\Domain\EquipmentRepository;
+use App\Faction\Domain\Faction;
+use App\Faction\Domain\FactionRepository;
+use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
@@ -15,45 +16,44 @@ use Slim\Psr7\Headers;
 use Slim\Psr7\Uri;
 use Slim\Psr7\Request as SlimRequest;
 
-class CreateEquipmentControllerTest extends TestCase
+class CreateFactionControllerTest extends TestCase
 {
     /**
      * @test
      * @group happy-path
      * @group integration
-     * @group equipment
+     * @group faction
      * @group controller
+     * @group ruyi
      */
-    public function givenARequestToTheControllerWithValidDataWhenCreateEquipmentThenReturnTheEquipmentAsJson()
+    public function givenARequestToTheControllerWithValidDataWhenCreateFactionThenReturnTheFactionAsJson()
     {
         $app = $this->getAppInstance();
 
-        $equipmentData = [
-            'name' => 'Sword of the King',
-            'type' => 'A sword with a hilt of gold and a blade of steel',
-            'made_by' => 'John Doe',
+        $factionData = [
+            'faction_name' => 'Kingdom of Spain',
+            'description' => 'A powerful kingdom in the south of Europe',
         ];
 
-        $request = $this->createJsonRequest('POST', '/equipments', $equipmentData);
-        $stream = (new StreamFactory())->createStream(json_encode($equipmentData));
+        $request = $this->createJsonRequest('POST', '/factions', $factionData);
+        $stream = (new StreamFactory())->createStream(json_encode($factionData));
         $request = $request->withBody($stream);
 
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
-
+        
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertArrayHasKey('equipment', $responseData);
+        $this->assertArrayHasKey('faction', $responseData);
         $this->assertArrayHasKey('message', $responseData);
-        $this->assertEquals('El equipamiento se ha creado correctamente', $responseData['message']);
+        $this->assertEquals('La facción se ha creado correctamente', $responseData['message']);
 
-        $repository = $app->getContainer()->get(EquipmentRepository::class);
-        $createdEquipment = $repository->findById($responseData['equipment']['id']);
+        $repository = $app->getContainer()->get(FactionRepository::class);
+        $createdFaction = $repository->findById($responseData['faction']['id']);
 
-        $this->assertEquals($equipmentData['name'], $createdEquipment->getName());
-        $this->assertEquals($equipmentData['type'], $createdEquipment->getType());
-        $this->assertEquals($equipmentData['made_by'], $createdEquipment->getMadeBy());
+        $this->assertEquals($factionData['faction_name'], $createdFaction->getName());
+        $this->assertEquals($factionData['description'], $createdFaction->getDescription());
     }
 
     private function getAppInstance(): App
@@ -62,7 +62,6 @@ class CreateEquipmentControllerTest extends TestCase
         $dotenv->load();
 
         $containerBuilder = new ContainerBuilder();
-
         $settings = require __DIR__ . '/../../../../config/definitions.php';
         $settings($containerBuilder);
 
@@ -88,12 +87,12 @@ class CreateEquipmentControllerTest extends TestCase
         $stream = (new StreamFactory())->createStreamFromResource($handle);
         fwrite($handle, json_encode($data));
         rewind($handle);
-    
+
         $h = new Headers();
         foreach ($headers as $name => $value) {
             $h->addHeader($name, $value);
         }
-    
+
         $request = new SlimRequest($method, $uri, $h, [], [], $stream);
         
         return $request->withParsedBody($data);
@@ -103,76 +102,73 @@ class CreateEquipmentControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group integration
-     * @group equipment
+     * @group faction
      * @group controller
      */
-    public function givenARequestToTheControllerWithInvalidDataWhenCreateEquipmentThenReturnErrorAsJson()
+    public function givenARequestToTheControllerWithInvalidDataWhenCreateFactionThenReturnErrorAsJson()
     {
         $app = $this->getAppInstance();
 
-        $invalidEquipmentData = [
-            'name' => '',
-            'type' => 'A sword with a hilt of gold and a blade of steel',
-            'made_by' => 'John Doe',
+        $invalidFactionData = [
+            'faction_name' => '',
+            'description' => 'A powerful kingdom in the south of Europe',
         ];
 
-        $request = $this->createJsonRequest('POST', '/equipments', $invalidEquipmentData);
+        $request = $this->createJsonRequest('POST', '/factions', $invalidFactionData);
         $response = $app->handle($request);
-
+        
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
 
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals('Campo requerido: name', $responseData['error']);
+        $this->assertEquals('Campo requerido: faction_name', $responseData['error']);
     }
 
     /**
      * @test
      * @group unhappy-path
      * @group integration
-     * @group equipment
+     * @group faction
      * @group controller
      */
-    public function givenARequestToTheControllerWithMissingFieldsWhenCreateEquipmentThenReturnErrorAsJson()
+    public function givenARequestToTheControllerWithMissingFieldsWhenCreateFactionThenReturnErrorAsJson()
     {
         $app = $this->getAppInstance();
 
-        $incompleteEquipmentData = [
-            'name' => 'Sword of the King',
-            'type' => 'A sword with a hilt of gold and a blade of steel',
-            'made_by' => '',
+        $incompleteFactionData = [
+            'faction_name' => 'Kingdom of Spain',
+            'description' => '',
         ];
 
-        $request = $this->createJsonRequest('POST', '/equipments', $incompleteEquipmentData);
+        $request = $this->createJsonRequest('POST', '/factions', $incompleteFactionData);
         $response = $app->handle($request);
-
+        
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
 
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals('Campo requerido: made_by', $responseData['error']);
+        $this->assertEquals('Campo requerido: description', $responseData['error']);
     }
 
     /**
      * @test
      * @group unhappy-path
      * @group integration
-     * @group equipment
+     * @group faction
      * @group controller
      */
-    public function givenARequestToTheControllerWithValidationExceptionWhenCreateEquipmentThenReturnErrorAsJson()
+    public function givenARequestToTheControllerWithValidationExceptionWhenCreateFactionThenReturnErrorAsJson()
     {
         $app = $this->getAppInstance();
 
-        $invalidEquipmentData = [
-            'name' => str_repeat('a', 101), // Nombre con más de 100 caracteres
-            'type' => 'A sword with a hilt of gold and a blade of steel',
-            'made_by' => 'John Doe',
+        $invalidFactionData = [
+            'faction_name' => str_repeat('a', 101), // Nombre con más de 100 caracteres
+            'description' => 'A powerful kingdom in the south of Europe',
         ];
 
-        $request = $this->createJsonRequest('POST', '/equipments', $invalidEquipmentData);
+        $request = $this->createJsonRequest('POST', '/factions', $invalidFactionData);
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
@@ -180,10 +176,6 @@ class CreateEquipmentControllerTest extends TestCase
 
         $this->assertEquals(500, $response->getStatusCode());
         $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals('El nombre no puede exceder los 100 caracteres', $responseData['error']);
+        $this->assertEquals('El nombre de la facción no puede exceder los 100 caracteres', $responseData['error']);
     }
-    
 }
-
-        
-        

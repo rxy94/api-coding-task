@@ -6,7 +6,8 @@ class CreateFactionUseCaseRequest
 {
     public function __construct(
         private string $faction_name,
-        private string $description
+        private string $description,
+        private ?int $id = null
     ) {
     }
 
@@ -19,5 +20,9 @@ class CreateFactionUseCaseRequest
     {
         return $this->description;
     }
-    
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
 }

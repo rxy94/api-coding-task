@@ -77,7 +77,7 @@ class UpdateEquipmentControllerTest extends TestCase
         ];
 
         // Crear una solicitud con los datos correctos
-        $request = $this->createJsonRequest('PUT', '/equipment/' . $equipmentId, $updateData);
+        $request = $this->createJsonRequest('PUT', '/equipments/' . $equipmentId, $updateData);
         
         // Asegurarse de que el cuerpo de la solicitud se establece correctamente
         $requestBody = json_encode($updateData);
@@ -136,7 +136,7 @@ class UpdateEquipmentControllerTest extends TestCase
         ];
 
         // Crear una solicitud con los datos inválidos
-        $request = $this->createJsonRequest('PUT', '/equipment/' . $equipmentId, $updateData);
+        $request = $this->createJsonRequest('PUT', '/equipments/' . $equipmentId, $updateData);
         $requestBody = json_encode($updateData);
         $stream = (new StreamFactory())->createStream($requestBody);
         $request = $request->withBody($stream);
@@ -167,7 +167,7 @@ class UpdateEquipmentControllerTest extends TestCase
         ];
 
         // Crear una solicitud con un ID que no existe
-        $request = $this->createJsonRequest('PUT', '/equipment/999', $updateData);
+        $request = $this->createJsonRequest('PUT', '/equipments/999', $updateData);
         $requestBody = json_encode($updateData);
         $stream = (new StreamFactory())->createStream($requestBody);
         $request = $request->withBody($stream);
@@ -209,7 +209,7 @@ class UpdateEquipmentControllerTest extends TestCase
         ];
 
         // Crear una solicitud con datos faltantes
-        $request = $this->createJsonRequest('PUT', '/equipment/' . $equipmentId, $updateData);
+        $request = $this->createJsonRequest('PUT', '/equipments/' . $equipmentId, $updateData);
         $requestBody = json_encode($updateData);
         $stream = (new StreamFactory())->createStream($requestBody);
         $request = $request->withBody($stream);

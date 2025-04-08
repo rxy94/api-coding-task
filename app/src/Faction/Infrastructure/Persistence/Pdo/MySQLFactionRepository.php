@@ -93,11 +93,9 @@ class MySQLFactionRepository implements FactionRepository
                 WHERE id = :id';
 
         $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute([
-            'id' => $faction->getId(),
-            'faction_name' => $faction->getName(),
-            'description' => $faction->getDescription()
-        ]);
+        $result = $stmt->execute(
+            MySQLFactionToArrayTransformer::transform($faction)
+        );
 
         if (!$result) {
             throw RowUpdateFailedException::build();

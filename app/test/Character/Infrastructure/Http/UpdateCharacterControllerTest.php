@@ -51,7 +51,7 @@ class UpdateCharacterControllerTest extends TestCase
         ];
 
         // Crear una solicitud con los datos correctos
-        $request = $this->createJsonRequest('PUT', '/character/' . $characterId, $updateData);
+        $request = $this->createJsonRequest('PUT', '/characters/' . $characterId, $updateData);
         
         // Asegurarse de que el cuerpo de la solicitud se establece correctamente
         $requestBody = json_encode($updateData);
@@ -112,7 +112,7 @@ class UpdateCharacterControllerTest extends TestCase
             'faction_id' => 1
         ];
 
-        $request = $this->createJsonRequest('PUT', '/character/' . $characterId, $invalidUpdateData);
+        $request = $this->createJsonRequest('PUT', '/characters/' . $characterId, $invalidUpdateData);
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
@@ -154,7 +154,7 @@ class UpdateCharacterControllerTest extends TestCase
             'faction_id' => 1
         ];
 
-        $request = $this->createJsonRequest('PUT', '/character/' . $characterId, $incompleteUpdateData);
+        $request = $this->createJsonRequest('PUT', '/characters/' . $characterId, $incompleteUpdateData);
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
@@ -186,7 +186,7 @@ class UpdateCharacterControllerTest extends TestCase
             'faction_id' => 1
         ];
 
-        $request = $this->createJsonRequest('PUT', '/character/' . $nonExistentId, $updateData);
+        $request = $this->createJsonRequest('PUT', '/characters/' . $nonExistentId, $updateData);
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();

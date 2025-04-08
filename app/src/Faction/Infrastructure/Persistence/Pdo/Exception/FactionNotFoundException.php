@@ -4,10 +4,10 @@ namespace App\Faction\Infrastructure\Persistence\Pdo\Exception;
 
 class FactionNotFoundException extends \Exception
 {
-    private const MESSAGE = 'La facción no encontrada';
+    private const MESSAGE = 'Facción no encontrada';
 
-    public static function build(): self
+    public static function build(): static
     {
-        return new self(self::MESSAGE);
+        return new static(self::MESSAGE);
     }
 }

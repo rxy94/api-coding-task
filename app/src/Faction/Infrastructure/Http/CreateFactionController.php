@@ -45,7 +45,7 @@ class CreateFactionController
                 'message' => 'La facción se ha creado correctamente'
             ]));
 
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
             
         } catch (FactionValidationException $e) {
             $response->getBody()->write(json_encode([

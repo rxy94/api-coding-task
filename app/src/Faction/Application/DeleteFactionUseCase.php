@@ -3,6 +3,7 @@
 namespace App\Faction\Application;
 
 use App\Faction\Domain\FactionRepository;
+use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
 
 class DeleteFactionUseCase
 {
@@ -15,7 +16,7 @@ class DeleteFactionUseCase
         $faction = $this->repository->findById($id);
 
         if (!$faction) {
-            throw new \Exception("Facción no encontrada con ID: {$id}");
+            throw FactionNotFoundException::build();
         }
 
         $this->repository->delete($faction);

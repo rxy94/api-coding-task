@@ -20,7 +20,7 @@ class ReadFactionByIdController {
 
         $response->getBody()->write(json_encode([
             'faction' => FactionToArrayTransformer::transform($faction),
-            'message' => 'La facción ha sido obtenida correctamente'
+            'message' => 'Facción encontrada correctamente'
         ]));
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus(200);

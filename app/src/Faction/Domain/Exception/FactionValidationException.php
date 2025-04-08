@@ -11,6 +11,7 @@ class FactionValidationException extends \DomainException
     private const FACTION_NAME_LENGTH_ERROR = "El nombre de la facción no puede exceder los 100 caracteres";
     private const DESCRIPTION_ERROR = "La descripción es requerida";
     private const DESCRIPTION_LENGTH_ERROR = "La descripción no puede exceder los 255 caracteres";
+    private const ID_NON_POSITIVE = "El ID no puede ser negativo";
 
     # Patrones de diseño: Constructor Semántico
 
@@ -38,5 +39,9 @@ class FactionValidationException extends \DomainException
     {
         return new self(self::DESCRIPTION_LENGTH_ERROR);
     }
-    
+
+    public static function withIdNonPositive(): static
+    {
+        return new self(self::ID_NON_POSITIVE);
+    }
 }

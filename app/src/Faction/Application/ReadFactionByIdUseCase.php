@@ -4,16 +4,24 @@ namespace App\Faction\Application;
 
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
+use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
 
 class ReadFactionByIdUseCase {
 
-    public function __construct(private FactionRepository $repository)
-    {
+    public function __construct(
+        private FactionRepository $repository
+    ) {
     }
 
     public function execute(int $id): Faction
     {
-        return $this->repository->findById($id);
+        $faction = $this->repository->findById($id);
+
+        if (!$faction) {
+            throw FactionNotFoundException::build();
+        }
+
+        return $faction;
     }
 
 }

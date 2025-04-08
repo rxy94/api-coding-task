@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Test\Character\Infrastructure\Http;
+namespace App\Test\Faction\Infrastructure\Http;
 
-use App\Character\Domain\Character;
-use App\Character\Domain\CharacterRepository;
-use App\Character\Domain\CharacterToArrayTransformer;
+use App\Faction\Domain\Faction;
+use App\Faction\Domain\FactionRepository;
+use App\Faction\Domain\FactionToArrayTransformer;
 
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
@@ -17,40 +17,39 @@ use Slim\Psr7\Factory\StreamFactory;
 use Slim\Psr7\Request as SlimRequest;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class ReadCharacterControllerTest extends TestCase
+class ReadFactionControllerTest extends TestCase
 {
     /**
      * @test
      * @group happy-path
-     * @group acceptance
+     * @group integration
+     * @group faction
+     * @group controller
+     * @group ruyi
      */
-    public function givenARequestToTheControllerWithOneCharacterIdWhenReadCharacterThenReturnTheCharacterAsJson()
+    public function testGivenARequestToTheControllerWithOneFactionIdWhenReadFactionThenReturnTheFactionAsJson()
     {
         $app = $this->getAppInstance();
 
-        $repository = $app->getContainer()->get(CharacterRepository::class);
+        $repository = $app->getContainer()->get(FactionRepository::class);
 
-        $expectedCharacter = new Character(
-            'John Doe',
-            '1990-01-01',
+        $expectedFaction = new Faction(
             'Kingdom of Spain',
-            1,
-            1
+            'A powerful kingdom in the south of Europe'
         );
+        
+        $savedFaction = $repository->save($expectedFaction);
 
-        $savedCharacter = $repository->save($expectedCharacter);
-
-        $request = $this->createRequest('GET', '/characters/' . $savedCharacter->getId());
+        $request = $this->createRequest('GET', '/factions/' . $savedFaction->getId());
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
         $serializedPayload = json_encode([
-            'character' => CharacterToArrayTransformer::transform($savedCharacter),
-            'message' => 'Personaje obtenido correctamente'
+            'faction' => FactionToArrayTransformer::transform($savedFaction),
+            'message' => 'Facción encontrada correctamente'
         ]);
 
         $this->assertEquals($serializedPayload, $payload);
-
     }
 
     private function getAppInstance(): App
@@ -89,8 +88,7 @@ class ReadCharacterControllerTest extends TestCase
         foreach ($headers as $name => $value) {
             $h->addHeader($name, $value);
         }
-
+        
         return new SlimRequest($method, $uri, $h, $cookies, $serverParams, $stream);
     }
-
 }

@@ -34,7 +34,7 @@ class CreateCharacterControllerTest extends TestCase
         ];
 
         // Crear una solicitud con los datos correctos
-        $request = $this->createJsonRequest('POST', '/character', $characterData);
+        $request = $this->createJsonRequest('POST', '/characters', $characterData);
         
         // Asegurarse de que el cuerpo de la solicitud se establece correctamente
         $requestBody = json_encode($characterData);
@@ -86,7 +86,7 @@ class CreateCharacterControllerTest extends TestCase
             'faction_id' => 1
         ];
 
-        $request = $this->createJsonRequest('POST', '/character', $invalidCharacterData);
+        $request = $this->createJsonRequest('POST', '/characters', $invalidCharacterData);
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
@@ -114,7 +114,7 @@ class CreateCharacterControllerTest extends TestCase
             'faction_id' => 1
         ];
 
-        $request = $this->createJsonRequest('POST', '/character', $incompleteCharacterData);
+        $request = $this->createJsonRequest('POST', '/characters', $incompleteCharacterData);
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
@@ -144,7 +144,7 @@ class CreateCharacterControllerTest extends TestCase
             'faction_id' => 1
         ];
 
-        $request = $this->createJsonRequest('POST', '/character', $invalidCharacterData);
+        $request = $this->createJsonRequest('POST', '/characters', $invalidCharacterData);
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();

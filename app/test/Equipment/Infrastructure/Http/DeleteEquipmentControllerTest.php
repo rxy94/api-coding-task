@@ -70,7 +70,7 @@ class DeleteEquipmentControllerTest extends TestCase
         $equipmentId = $savedEquipment->getId();    
 
         // Crear una solicitud para eliminar el equipamiento
-        $request = $this->createJsonRequest('DELETE', '/equipment/' . $equipmentId, []);
+        $request = $this->createJsonRequest('DELETE', '/equipments/' . $equipmentId, []);
         
         // Procesar la solicitud
         $response = $this->app->handle($request);
@@ -94,7 +94,7 @@ class DeleteEquipmentControllerTest extends TestCase
     public function givenARequestToTheControllerWithNonExistentIdWhenDeleteEquipmentThenReturnErrorAsJson() 
     {
         // Crear una solicitud con un ID que no existe
-        $request = $this->createJsonRequest('DELETE', '/equipment/999', []);
+        $request = $this->createJsonRequest('DELETE', '/equipments/999', []);
         
         // Procesar la solicitud
         $response = $this->app->handle($request);
