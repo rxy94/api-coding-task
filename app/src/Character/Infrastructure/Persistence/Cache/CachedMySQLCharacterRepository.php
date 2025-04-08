@@ -67,25 +67,17 @@ class CachedMySQLCharacterRepository implements CharacterRepository
     public function delete(Character $character): bool
     {
 
-        $this->mySQLCharacterRepository->delete($character);
+        # Primero eliminamos de la base de datos
+        $result = $this->mySQLCharacterRepository->delete($character);
         
-        $this->redis->del($this->getKey($character->getId()));
-        $this->redis->del($this->getKey('all'));
+        if ($result) {
+            # Si se eliminó correctamente de la base de datos, eliminamos de la caché
+            $this->redis->del($this->getKey($character->getId()));
+            $this->redis->del($this->getKey('all'));
+            $this->logger->info('Personaje eliminado de la caché', ['id' => $character->getId()]);
+        }
 
-        $this->logger->info('Personaje eliminado de la caché', ['id' => $character->getId()]);
-
-        return true;
-
-
-        # En la caché tenemos:
-        // 'CachedMySQLCharacterRepository:1' => 'Personaje1'
-        // 'CachedMySQLCharacterRepository:2' => 'Personaje2'
-        // 'CachedMySQLCharacterRepository:all' => ['Personaje1', 'Personaje2']  // Lista completa
-
-        # Si eliminamos el Personaje1:
-        //$this->redis->del($this->getKey($character->getId()));  // Elimina 'CachedMySQLCharacterRepository:1'
-        # Pero 'CachedMySQLCharacterRepository:all' sigue conteniendo ['Personaje1', 'Personaje2']
-
+        return $result;
     }
 }
 
