@@ -3,14 +3,11 @@
 namespace App\Test\Faction\Application;
 
 use App\Faction\Domain\FactionRepository;
-use App\Faction\Domain\Exception\FactionValidationException;
 use App\Faction\Application\ReadFactionByIdUseCase;
 use App\Faction\Domain\Faction;
 use App\Faction\Infrastructure\Persistence\InMemory\ArrayFactionRepository;
-use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
-use DomainException;
+use App\Faction\Domain\Exception\FactionNotFoundException;
 use PHPUnit\Framework\TestCase;
-use App\Test\Faction\Application\MotherObject\CreateFactionUseCaseRequestMotherObject;
 
 
 class ReadFactionUseCaseTest extends TestCase

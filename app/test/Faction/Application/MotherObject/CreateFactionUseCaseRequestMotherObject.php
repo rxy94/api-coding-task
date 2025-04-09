@@ -42,7 +42,7 @@ class CreateFactionUseCaseRequestMotherObject
     {
         return new CreateFactionUseCaseRequest(
             'Kingdom of Spain',
-            str_repeat('a', 256)
+            str_repeat('a', 1001)
         );
     }
 

@@ -3,8 +3,8 @@
 namespace App\Test\Faction\Infrastructure\Persistence\Pdo;
 
 use App\Faction\Domain\Faction;
+use App\Faction\Domain\Exception\FactionNotFoundException;
 use App\Faction\Infrastructure\Persistence\Pdo\MySQLFactionRepository;
-use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -28,8 +28,10 @@ class MySQLFactionRepositoryTest extends TestCase
                 $ids = implode(',', $this->insertedFactionIds);
                 $this->pdo->exec("DELETE FROM factions WHERE id IN ($ids)");
             }
+
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+
         } finally {
             $this->insertedFactionIds = [];
         }
@@ -48,6 +50,7 @@ class MySQLFactionRepositoryTest extends TestCase
      * @group integration
      * @group faction
      * @group repository
+     * @group faction-repository
      */
     public function givenARepositoryWithOneFactionIdWhenReadFactionThenReturnTheFaction()
     {
@@ -70,6 +73,7 @@ class MySQLFactionRepositoryTest extends TestCase
      * @group integration
      * @group faction
      * @group repository
+     * @group faction-repository
      */
     public function givenARepositoryWhenCreateFactionThenFactionIsSaved()
     {
@@ -123,8 +127,9 @@ class MySQLFactionRepositoryTest extends TestCase
      * @group integration
      * @group faction
      * @group repository
+     * @group faction-repository
      */
-    public function givenARepositoryWithEquipmentWhenDeleteEquipmentThenEquipmentIsDeleted()
+    public function givenARepositoryWithFactionWhenDeleteFactionThenFactionIsDeleted()
     {
         $faction = new Faction(
             'Kingdom of Spain',
@@ -147,6 +152,7 @@ class MySQLFactionRepositoryTest extends TestCase
      * @group integration
      * @group faction
      * @group repository
+     * @group faction-repository
      */
     public function givenARepositoryWhenFindByIdWithNonExistentIdThenThrowException()
     {
@@ -160,6 +166,7 @@ class MySQLFactionRepositoryTest extends TestCase
      * @group integration
      * @group faction
      * @group repository
+     * @group faction-repository
      */
     public function givenARepositoryWithMultipleFactionsWhenFindAllThenReturnAllFactions()
     {

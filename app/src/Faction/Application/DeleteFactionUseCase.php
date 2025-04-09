@@ -3,8 +3,7 @@
 namespace App\Faction\Application;
 
 use App\Faction\Domain\FactionRepository;
-use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
-
+use App\Faction\Domain\Exception\FactionNotFoundException;
 class DeleteFactionUseCase
 {
     public function __construct(private FactionRepository $repository)

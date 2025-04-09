@@ -5,12 +5,9 @@ namespace App\Test\Faction\Application;
 use App\Faction\Application\DeleteFactionUseCase;
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\Faction;
-use App\Faction\Domain\Exception\FactionValidationException;
+use App\Faction\Domain\Exception\FactionNotFoundException;
 use App\Faction\Infrastructure\Persistence\InMemory\ArrayFactionRepository;
-use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
-use DomainException;
 use PHPUnit\Framework\TestCase;
-use App\Test\Faction\Application\MotherObject\CreateFactionUseCaseRequestMotherObject;
 
 
 class DeleteFactionUseCaseTest extends TestCase

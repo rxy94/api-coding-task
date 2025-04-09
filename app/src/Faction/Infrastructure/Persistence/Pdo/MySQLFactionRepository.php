@@ -2,9 +2,9 @@
 
 namespace App\Faction\Infrastructure\Persistence\Pdo;
 
+use App\Faction\Domain\Exception\FactionNotFoundException;
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
-use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
 use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionsNotFoundException;
 use App\Faction\Infrastructure\Persistence\Pdo\MySQLFactionFactory;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;

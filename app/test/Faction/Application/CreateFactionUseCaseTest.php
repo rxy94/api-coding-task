@@ -52,9 +52,9 @@ class CreateFactionUseCaseTest extends TestCase
      * @group unhappy-path
      * @group unit
      * @group faction
+     * @group create-faction
      * @group validation
      * @dataProvider invalidDataProvider
-     * @group ruyi
      */
     public function givenARequestWithInvalidDataWhenCreateFactionThenReturnError(
         CreateFactionUseCaseRequest $request,

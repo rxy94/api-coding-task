@@ -42,7 +42,7 @@ class Faction
 
     private function validateDescriptionLength(): void
     {
-        if (strlen($this->description) > 255) {
+        if (strlen($this->description) > 1000) {
             throw FactionValidationException::withDescriptionLengthError();
         }
     }

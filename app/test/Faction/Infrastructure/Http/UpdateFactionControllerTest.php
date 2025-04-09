@@ -50,7 +50,7 @@ class UpdateFactionControllerTest extends TestCase
      * @test
      * @group happy-path
      * @group acceptance
-     * @group faction
+     * @group update-faction
      * @group controller
      */ 
     public function givenARequestToTheControllerWithValidDataWhenUpdateFactionThenReturnTheFactionAsJson()
@@ -144,7 +144,7 @@ class UpdateFactionControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
-     * @group faction
+     * @group update-faction
      * @group controller
      */
     public function givenARequestToTheControllerWithInvalidDataWhenUpdateFactionThenReturnValidationError()
@@ -184,7 +184,7 @@ class UpdateFactionControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
-     * @group faction
+     * @group update-faction
      * @group controller
      */
     public function givenARequestToTheControllerWithNonExistentFactionWhenUpdateFactionThenReturnNotFoundError()
@@ -214,7 +214,7 @@ class UpdateFactionControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
-     * @group faction
+     * @group update-faction
      * @group controller
      */
     public function givenARequestToTheControllerWithMissingDataWhenUpdateFactionThenReturnValidationError()

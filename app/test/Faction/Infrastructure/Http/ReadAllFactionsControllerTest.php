@@ -5,8 +5,6 @@ namespace App\Test\Faction\Infrastructure\Http;
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\FactionToArrayTransformer;
-use App\Faction\Domain\Exception\FactionNotFoundException;
-
 use PDO;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
@@ -19,7 +17,7 @@ use Slim\Psr7\Factory\StreamFactory;
 use Slim\Psr7\Request as SlimRequest;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class ReadFactionControllerTest extends TestCase
+class ReadAllFactionsControllerTest extends TestCase
 {
     private PDO $pdo;
     private array $insertedFactionIds = [];
@@ -56,34 +54,47 @@ class ReadFactionControllerTest extends TestCase
      * @group happy-path
      * @group acceptance
      * @group faction
-     * @group read-faction
+     * @group read-all-factions
      */
-    public function givenARequestToTheControllerWhenReadFactionThenReturnTheFactionAsJson()
+    public function givenARequestToTheControllerWhenReadAllFactionsThenReturnAllFactionsAsJson()
     {
         $app = $this->getAppInstance();
+
         $repository = $app->getContainer()->get(FactionRepository::class);
 
-        $faction = new Faction(
-            'Kingdom of Spain',
-            'A powerful kingdom in the south of Europe'
-        );
-        
-        $savedFaction = $repository->save($faction);
-        $this->insertedFactionIds[] = $savedFaction->getId();
+        $factions = [
+            new Faction(
+                'Gondor',
+                'El reino de Gondor es uno de los reinos más importantes de la Tierra Media'
+            ),
+            new Faction(
+                'Rohan',
+                'El reino de Rohan es conocido por sus jinetes y caballos'
+            )
+        ];
 
-        $request = $this->createRequest('GET', '/factions/' . $savedFaction->getId());
+        $savedFactions = [];
+        foreach ($factions as $faction) {
+            $savedFaction = $repository->save($faction);
+            $savedFactions[] = $savedFaction;
+            $this->insertedFactionIds[] = $savedFaction->getId();
+        }
+
+        $request = $this->createRequest('GET', '/factions');
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
-        $responseData = json_decode($payload, true);
+        $serializedPayload = json_encode([
+            'factions' => array_map(
+                function (Faction $faction) {
+                    return FactionToArrayTransformer::transform($faction);
+                },
+                $savedFactions
+            ),
+            'message' => 'Facciones obtenidas correctamente'
+        ]);
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertArrayHasKey('faction', $responseData);
-        $this->assertEquals(
-            FactionToArrayTransformer::transform($savedFaction),
-            $responseData['faction']
-        );
-        $this->assertEquals('Facción encontrada correctamente', $responseData['message']);
+        $this->assertEquals($serializedPayload, $payload);
     }
 
     /**
@@ -91,22 +102,22 @@ class ReadFactionControllerTest extends TestCase
      * @group unhappy-path
      * @group acceptance
      * @group faction
-     * @group read-faction
+     * @group read-all-factions
      */
-    public function givenARequestToTheControllerWhenFactionNotFoundThenReturnErrorAsJson()
+    public function givenARequestToTheControllerWhenNoFactionsExistThenReturnEmptyArray()
     {
         $app = $this->getAppInstance();
 
-        $nonExistentId = 999999;
-        $request = $this->createRequest('GET', '/factions/' . $nonExistentId);
+        $request = $this->createRequest('GET', '/factions');
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
-        $responseData = json_decode($payload, true);
+        $serializedPayload = json_encode([
+            'factions' => [],
+            'message' => 'Facciones obtenidas correctamente'
+        ]);
 
-        $this->assertEquals(404, $response->getStatusCode());
-        $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals(FactionNotFoundException::build()->getMessage(), $responseData['error']);
+        $this->assertEquals($serializedPayload, $payload);
     }
 
     private function getAppInstance(): App
@@ -115,6 +126,7 @@ class ReadFactionControllerTest extends TestCase
         $dotenv->load();
 
         $containerBuilder = new ContainerBuilder();
+
         $settings = require __DIR__ . '/../../../../config/definitions.php';
         $settings($containerBuilder);
 
@@ -144,7 +156,7 @@ class ReadFactionControllerTest extends TestCase
         foreach ($headers as $name => $value) {
             $h->addHeader($name, $value);
         }
-        
+
         return new SlimRequest($method, $uri, $h, $cookies, $serverParams, $stream);
     }
 }

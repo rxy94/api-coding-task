@@ -3,6 +3,7 @@
 namespace App\Faction\Infrastructure\Http;
 
 use App\Faction\Application\DeleteFactionUseCase;
+use App\Faction\Domain\Exception\FactionNotFoundException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -23,6 +24,13 @@ class DeleteFactionByIdController
             ]));
 
             return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (FactionNotFoundException $e) {
+            $response->getBody()->write(json_encode([
+                'error' => $e->getMessage()
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
             
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([

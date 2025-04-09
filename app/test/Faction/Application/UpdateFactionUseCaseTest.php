@@ -4,11 +4,11 @@ namespace App\Test\Faction\Application;
 
 use App\Faction\Application\UpdateFactionUseCase;
 use App\Faction\Application\UpdateFactionUseCaseRequest;
+use App\Faction\Domain\Exception\FactionNotFoundException;
 use App\Faction\Domain\Exception\FactionValidationException;
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\Faction;
 use App\Faction\Infrastructure\Persistence\InMemory\ArrayFactionRepository;
-use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
 use PHPUnit\Framework\TestCase;
 
 class UpdateFactionUseCaseTest extends TestCase

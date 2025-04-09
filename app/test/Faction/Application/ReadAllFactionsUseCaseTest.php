@@ -11,17 +11,6 @@ use PHPUnit\Framework\TestCase;
 
 class ReadAllFactionsUseCaseTest extends TestCase
 {
-    private function mockFactionRepository(array $factions): FactionRepository
-    {
-        $repository = new ArrayFactionRepository([]);
-
-        foreach ($factions as $faction) {
-            $repository->save($faction);
-        }
-
-        return $repository;
-    }
-
     /**
      * @test
      * @group happy-path
@@ -54,11 +43,22 @@ class ReadAllFactionsUseCaseTest extends TestCase
         $this->assertEquals($faction2, $result[2]);
     }
 
+    private function mockFactionRepository(array $factions): FactionRepository
+    {
+        $repository = new ArrayFactionRepository([]);
+
+        foreach ($factions as $faction) {
+            $repository->save($faction);
+        }
+
+        return $repository;
+    }
+
     /**
      * @test
      * @group unhappy-path
      * @group unit
-     * @group faction
+     * @group faction   
      * @group read-all-factions
      */
     public function givenARepositoryWithNoFactionsWhenReadAllFactionsThenReturnEmptyArray()
