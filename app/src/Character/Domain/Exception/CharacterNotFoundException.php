@@ -4,7 +4,7 @@ namespace App\Character\Domain\Exception;
 
 class CharacterNotFoundException extends \Exception
 {
-    private const MESSAGE = 'Character not found';
+    private const MESSAGE = 'Personaje no encontrado';
 
     public static function build(): self
     {

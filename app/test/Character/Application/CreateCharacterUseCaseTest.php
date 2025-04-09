@@ -53,6 +53,7 @@ class CreateCharacterUseCaseTest extends TestCase
      * @group unhappy-path
      * @group unit
      * @group character
+     * @group create-character
      * @group validation
      * @dataProvider invalidDataProvider
      */

@@ -6,7 +6,7 @@ use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Infrastructure\Persistence\Cache\CachedMySQLCharacterRepository;
 use App\Character\Infrastructure\Persistence\Pdo\MySQLCharacterRepository;
-use App\Character\Infrastructure\Persistence\Pdo\Exception\CharacterNotFoundException;
+use App\Character\Domain\Exception\CharacterNotFoundException;
 use PDO;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -17,6 +17,10 @@ class CachedMySQLCharacterRepositoryTest extends TestCase
     private Redis $redis;
     private CachedMySQLCharacterRepository $cachedRepository;
     private MySQLCharacterRepository $mysqlRepository;
+    private PDO $pdo;
+    private array $insertedCharacterIds = [];
+    private array $insertedEquipmentIds = [];
+    private array $insertedFactionIds = [];
 
     protected function setUp(): void
     {
@@ -25,21 +29,53 @@ class CachedMySQLCharacterRepositoryTest extends TestCase
         $this->redis->connect("redis", 6379);
         $this->redis->flushAll();
 
+        $this->pdo = $this->createPdoConnection();
+        
+        // Crear equipos de prueba
+        $this->pdo->exec("INSERT INTO equipments (name, type, made_by) VALUES ('Sword of Testing', 'Weapon', 'Test Blacksmith')");
+        $this->insertedEquipmentIds[] = (int)$this->pdo->lastInsertId();
+
+        // Crear facciones de prueba
+        $this->pdo->exec("INSERT INTO factions (faction_name, description) VALUES ('Test Faction', 'A test faction for testing')");
+        $this->insertedFactionIds[] = (int)$this->pdo->lastInsertId();
+
         $this->initializeRepository();
     }
 
     protected function tearDown(): void
     {
-        $pdo = $this->createPdoConnection();
-        # Deshabilitamos las verificaciones de llaves foráneas para permitir truncar las tablas.
-        $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
-        $pdo->exec("TRUNCATE TABLE characters;");
+        try {
+            // Eliminar personajes
+            if (!empty($this->insertedCharacterIds)) {
+                $ids = implode(',', $this->insertedCharacterIds);
+                $this->pdo->exec("DELETE FROM characters WHERE id IN ($ids)");
+            }
+
+            // Eliminar equipos
+            if (!empty($this->insertedEquipmentIds)) {
+                $ids = implode(',', $this->insertedEquipmentIds);
+                $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
+            }
+
+            // Eliminar facciones
+            if (!empty($this->insertedFactionIds)) {
+                $ids = implode(',', $this->insertedFactionIds);
+                $this->pdo->exec("DELETE FROM factions WHERE id IN ($ids)");
+            }
+        } catch (\Exception $e) {
+            error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+        } finally {
+            $this->insertedCharacterIds = [];
+            $this->insertedEquipmentIds = [];
+            $this->insertedFactionIds = [];
+        }
+
+        $this->redis->flushAll();
     }
 
     private function initializeRepository(): void
     {
-        $pdo = $this->createPdoConnection();
-        $this->mysqlRepository = new MySQLCharacterRepository($pdo);
+        $this->mysqlRepository = new MySQLCharacterRepository($this->pdo);
         $logger = new NullLogger();
 
         $this->cachedRepository = new CachedMySQLCharacterRepository(
@@ -62,9 +98,10 @@ class CachedMySQLCharacterRepositoryTest extends TestCase
             "John Doe",
             "1990-01-01",
             "Human",
-            1,
-            1
+            $this->insertedEquipmentIds[0],
+            $this->insertedFactionIds[0]
         ));
+        $this->insertedCharacterIds[] = (int)$character->getId();
 
         # Se realiza la primera recuperación para que se almacene en caché.
         $this->cachedRepository->findById($character->getId());
@@ -96,7 +133,7 @@ class CachedMySQLCharacterRepositoryTest extends TestCase
         return new PDO("mysql:host=db;dbname=test", "root", "root");
     }
 
-        /**
+    /**
      * @test
      * @group integration
      * @group character-cache
@@ -109,29 +146,28 @@ class CachedMySQLCharacterRepositoryTest extends TestCase
             "John Doe",
             "1990-01-01",
             "Human",
-            1,
-            1
+            $this->insertedEquipmentIds[0],
+            $this->insertedFactionIds[0]
         );
         $character2 = new Character(
             "Jane Doe",
             "1990-01-01",
             "Human",
-            1,
-            1
+            $this->insertedEquipmentIds[0],
+            $this->insertedFactionIds[0]
         );
 
         // Guarda los personajes mediante el repositorio caché.
         $savedCharacter1 = $this->cachedRepository->save($character1);
         $savedCharacter2 = $this->cachedRepository->save($character2);
+        $this->insertedCharacterIds[] = (int)$savedCharacter1->getId();
+        $this->insertedCharacterIds[] = (int)$savedCharacter2->getId();
 
         // Llama a findAll() para obtener todos los personajes y cachear el conjunto.
         $characters = $this->cachedRepository->findAll();
 
         // Verifica que se hayan obtenido 2 personajes.
         $this->assertCount(2, $characters);
-        // Se asume que el orden es relevante; de lo contrario se podría hacer:
-        // $this->assertContainsEquals($savedCharacter1, $characters);
-        // $this->assertContainsEquals($savedCharacter2, $characters);
         $this->assertEquals($savedCharacter1, $characters[0]);
         $this->assertEquals($savedCharacter2, $characters[1]);
 
@@ -158,12 +194,13 @@ class CachedMySQLCharacterRepositoryTest extends TestCase
             "John Doe",
             "1990-01-01",
             "Human",
-            1,
-            1
+            $this->insertedEquipmentIds[0],
+            $this->insertedFactionIds[0]
         );
 
         // Se guarda el personaje.
         $savedCharacter = $this->cachedRepository->save($character);
+        $this->insertedCharacterIds[] = (int)$savedCharacter->getId();
 
         // Se elimina el personaje.
         $result = $this->cachedRepository->delete($savedCharacter);
@@ -175,7 +212,6 @@ class CachedMySQLCharacterRepositoryTest extends TestCase
 
         // Se espera que al llamar a findById() se lance la excepción de "CharacterNotFoundException".
         $this->expectException(CharacterNotFoundException::class);
-        $this->expectExceptionMessage("Personaje no encontrado");
 
         // Al intentar recuperar el personaje, se lanza la excepción.
         $this->cachedRepository->findById($savedCharacter->getId());

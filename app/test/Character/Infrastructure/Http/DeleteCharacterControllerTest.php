@@ -4,26 +4,83 @@ namespace App\Test\Character\Infrastructure\Http;
 
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
-use App\Character\Infrastructure\Persistence\Pdo\Exception\CharacterNotFoundException;
+use App\Character\Domain\Exception\CharacterNotFoundException;
+use PDO;
+
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
 use Slim\Factory\AppFactory;
-use Slim\Psr7\Factory\StreamFactory;
-use Slim\Psr7\Headers;
 use Slim\Psr7\Uri;
+use Slim\Psr7\Headers;
+use Slim\Psr7\Factory\StreamFactory;
 use Slim\Psr7\Request as SlimRequest;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class DeleteCharacterControllerTest extends TestCase
 {
+    private PDO $pdo;
+    private array $insertedCharacterIds = [];
+    private array $insertedEquipmentIds = [];
+    private array $insertedFactionIds = [];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->pdo = $this->createPdoConnection();
+        
+        // Crear equipos de prueba
+        $this->pdo->exec("INSERT INTO equipments (name, type, made_by) VALUES ('Sword of Testing', 'Weapon', 'Test Blacksmith')");
+        $this->insertedEquipmentIds[] = $this->pdo->lastInsertId();
+
+        // Crear facciones de prueba
+        $this->pdo->exec("INSERT INTO factions (faction_name, description) VALUES ('Test Faction', 'A test faction for testing')");
+        $this->insertedFactionIds[] = $this->pdo->lastInsertId();
+    }
+
+    protected function tearDown(): void
+    {
+        try {
+            // Eliminar personajes
+            if (!empty($this->insertedCharacterIds)) {
+                $ids = implode(',', $this->insertedCharacterIds);
+                $this->pdo->exec("DELETE FROM characters WHERE id IN ($ids)");
+            }
+
+            // Eliminar equipos
+            if (!empty($this->insertedEquipmentIds)) {
+                $ids = implode(',', $this->insertedEquipmentIds);
+                $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
+            }
+
+            // Eliminar facciones
+            if (!empty($this->insertedFactionIds)) {
+                $ids = implode(',', $this->insertedFactionIds);
+                $this->pdo->exec("DELETE FROM factions WHERE id IN ($ids)");
+            }
+        } catch (\Exception $e) {
+            error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+        } finally {
+            $this->insertedCharacterIds = [];
+            $this->insertedEquipmentIds = [];
+            $this->insertedFactionIds = [];
+        }
+
+        parent::tearDown();
+    }
+
+    private function createPdoConnection(): PDO
+    {
+        return new PDO('mysql:host=db;dbname=test', 'root', 'root');
+    }
+
     /**
      * @test
      * @group happy-path
      * @group acceptance
-     * @group delete-character
      * @group character
+     * @group delete-character
      */
     public function givenARequestToTheControllerWithValidIdWhenDeleteCharacterThenReturnSuccessMessage()
     {
@@ -35,14 +92,14 @@ class DeleteCharacterControllerTest extends TestCase
             'John Doe',
             '1990-01-01',
             'Kingdom of Spain',
-            1,
-            1
+            $this->insertedEquipmentIds[0],
+            $this->insertedFactionIds[0]
         );
         $savedCharacter = $repository->save($character);
-        $characterId = $savedCharacter->getId();
+        $this->insertedCharacterIds[] = $savedCharacter->getId();
 
         // Crear una solicitud para eliminar el personaje
-        $request = $this->createRequest('DELETE', '/characters/' . $characterId);
+        $request = $this->createRequest('DELETE', '/characters/' . $savedCharacter->getId());
         
         // Procesar la solicitud
         $response = $app->handle($request);
@@ -50,10 +107,6 @@ class DeleteCharacterControllerTest extends TestCase
         // Obtener y decodificar la respuesta
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
-        
-        // Depuración
-        echo "Status Code: " . $response->getStatusCode() . "\n";
-        echo "Response Body: " . $payload . "\n";
         
         // Verificar la respuesta
         $this->assertEquals(200, $response->getStatusCode());
@@ -62,25 +115,22 @@ class DeleteCharacterControllerTest extends TestCase
 
         // Verificar que el personaje se eliminó correctamente de la base de datos
         $this->expectException(CharacterNotFoundException::class);
-        $repository->findById($characterId);
+        $repository->findById($savedCharacter->getId());
     }
 
     /**
      * @test
      * @group unhappy-path
      * @group acceptance
-     * @group delete-character
      * @group character
+     * @group delete-character
      */
     public function givenARequestToTheControllerWithNonExistentIdWhenDeleteCharacterThenReturnErrorAsJson()
     {
         $app = $this->getAppInstance();
         
-        // ID de un personaje que no existe
-        $nonExistentId = 999;
-        
-        // Crear una solicitud para eliminar el personaje
-        $request = $this->createRequest('DELETE', '/characters/' . $nonExistentId);
+        // Crear una solicitud para eliminar un personaje que no existe
+        $request = $this->createRequest('DELETE', '/characters/999');
         
         // Procesar la solicitud
         $response = $app->handle($request);
@@ -89,19 +139,15 @@ class DeleteCharacterControllerTest extends TestCase
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
         
-        // Depuración
-        echo "Status Code: " . $response->getStatusCode() . "\n";
-        echo "Response Body: " . $payload . "\n";
-        
         // Verificar la respuesta
-        $this->assertEquals(500, $response->getStatusCode());
+        $this->assertEquals(404, $response->getStatusCode());
         $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals('Error al eliminar el personaje', $responseData['error']);
+        $this->assertEquals(CharacterNotFoundException::build()->getMessage(), $responseData['error']);
     }
 
     private function getAppInstance(): App
     {
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../');
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../', '.env.test');
         $dotenv->load();
 
         $containerBuilder = new ContainerBuilder();
@@ -123,9 +169,7 @@ class DeleteCharacterControllerTest extends TestCase
     private function createRequest(
         string $method,
         string $path,
-        array $headers = ['HTTP_ACCEPT' => 'application/json'],
-        array $cookies = [],
-        array $serverParams = []
+        array $headers = ['HTTP_ACCEPT' => 'application/json']
     ): Request {
         $uri = new Uri('', '', 80, $path);
         $handle = fopen('php://temp', 'w+');
@@ -136,6 +180,6 @@ class DeleteCharacterControllerTest extends TestCase
             $h->addHeader($name, $value);
         }
 
-        return new SlimRequest($method, $uri, $h, $cookies, $serverParams, $stream);
+        return new SlimRequest($method, $uri, $h, [], [], $stream);
     }
 }

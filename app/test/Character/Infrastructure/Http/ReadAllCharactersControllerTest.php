@@ -22,26 +22,55 @@ class ReadAllCharactersControllerTest extends TestCase
 {
     private PDO $pdo;
     private array $insertedCharacterIds = [];
+    private array $insertedEquipmentIds = [];
+    private array $insertedFactionIds = [];
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->pdo = $this->createPdoConnection();
+        
+        // Crear equipos de prueba
+        $this->pdo->exec("INSERT INTO equipments (name, type, made_by) VALUES ('Sword of Testing', 'Weapon', 'Test Blacksmith')");
+        $this->insertedEquipmentIds[] = $this->pdo->lastInsertId();
+
+        $this->pdo->exec("INSERT INTO equipments (name, type, made_by) VALUES ('Sword of Testing 2', 'Weapon', 'Test Blacksmith 2')");
+        $this->insertedEquipmentIds[] = $this->pdo->lastInsertId();
+
+        // Crear facciones de prueba
+        $this->pdo->exec("INSERT INTO factions (faction_name, description) VALUES ('Test Faction', 'A test faction for testing')");
+        $this->insertedFactionIds[] = $this->pdo->lastInsertId();
+
+        $this->pdo->exec("INSERT INTO factions (faction_name, description) VALUES ('Test Faction 2', 'A test faction for testing 2')");
+        $this->insertedFactionIds[] = $this->pdo->lastInsertId();
     }
 
     protected function tearDown(): void
     {
         try {
+            // Eliminar personajes
             if (!empty($this->insertedCharacterIds)) {
                 $ids = implode(',', $this->insertedCharacterIds);
                 $this->pdo->exec("DELETE FROM characters WHERE id IN ($ids)");
             }
 
+            // Eliminar equipos
+            if (!empty($this->insertedEquipmentIds)) {
+                $ids = implode(',', $this->insertedEquipmentIds);
+                $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
+            }
+
+            // Eliminar facciones
+            if (!empty($this->insertedFactionIds)) {
+                $ids = implode(',', $this->insertedFactionIds);
+                $this->pdo->exec("DELETE FROM factions WHERE id IN ($ids)");
+            }
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
-
         } finally {
             $this->insertedCharacterIds = [];
+            $this->insertedEquipmentIds = [];
+            $this->insertedFactionIds = [];
         }
 
         parent::tearDown();
@@ -57,6 +86,7 @@ class ReadAllCharactersControllerTest extends TestCase
      * @group happy-path
      * @group acceptance
      * @group character
+     * @group read-all-characters
      */
     public function givenARequestToTheControllerWhenReadAllCharactersThenReturnAllCharactersAsJson()
     {
@@ -69,15 +99,15 @@ class ReadAllCharactersControllerTest extends TestCase
                 'John Doe',
                 '1990-01-01',
                 'Kingdom of Spain',
-                1,
-                1
+                $this->insertedEquipmentIds[0],
+                $this->insertedFactionIds[0]
             ),
             new Character(
                 'Jane Smith',
                 '1992-05-15',
                 'Kingdom of France',
-                1,
-                1
+                $this->insertedEquipmentIds[1],
+                $this->insertedFactionIds[1]
             )
         ];
 
@@ -109,7 +139,8 @@ class ReadAllCharactersControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
-     * @group character
+     * @group character 
+     * @group read-all-characters
      */
     public function givenARequestToTheControllerWhenNoCharactersExistThenReturnEmptyArray()
     {

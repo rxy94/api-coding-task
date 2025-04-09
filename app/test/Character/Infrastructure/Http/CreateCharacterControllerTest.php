@@ -2,7 +2,6 @@
 
 namespace App\Test\Character\Infrastructure\Http;
 
-use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterValidationException;
 use PDO;
@@ -22,11 +21,27 @@ class CreateCharacterControllerTest extends TestCase
 {
     private PDO $pdo;
     private array $insertedCharacterIds = [];
+    private array $insertedEquipmentIds = [];
+    private array $insertedFactionIds = [];
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->pdo = $this->createPdoConnection();
+
+        // Crear equipos de prueba
+        $this->pdo->exec("INSERT INTO equipments (name, type, made_by) VALUES ('Sword of Testing', 'Weapon', 'Test Blacksmith')");
+        $this->insertedEquipmentIds[] = $this->pdo->lastInsertId();
+
+        $this->pdo->exec("INSERT INTO equipments (name, type, made_by) VALUES ('Sword of Testing 2', 'Weapon', 'Test Blacksmith 2')");
+        $this->insertedEquipmentIds[] = $this->pdo->lastInsertId();
+
+        // Crear facciones de prueba
+        $this->pdo->exec("INSERT INTO factions (faction_name, description) VALUES ('Test Faction', 'A test faction for testing')");
+        $this->insertedFactionIds[] = $this->pdo->lastInsertId();
+
+        $this->pdo->exec("INSERT INTO factions (faction_name, description) VALUES ('Test Faction 2', 'A test faction for testing 2')");
+        $this->insertedFactionIds[] = $this->pdo->lastInsertId();
     }
 
     protected function tearDown(): void
@@ -36,10 +51,22 @@ class CreateCharacterControllerTest extends TestCase
                 $ids = implode(',', $this->insertedCharacterIds);
                 $this->pdo->exec("DELETE FROM characters WHERE id IN ($ids)");
             }
+
+            if (!empty($this->insertedEquipmentIds)) {
+                $ids = implode(',', $this->insertedEquipmentIds);
+                $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
+            }
+
+            if (!empty($this->insertedFactionIds)) {
+                $ids = implode(',', $this->insertedFactionIds);
+                $this->pdo->exec("DELETE FROM factions WHERE id IN ($ids)");
+            }
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
         } finally {
             $this->insertedCharacterIds = [];
+            $this->insertedEquipmentIds = [];
+            $this->insertedFactionIds = [];
         }
 
         parent::tearDown();
@@ -65,36 +92,28 @@ class CreateCharacterControllerTest extends TestCase
             'name' => 'John Doe',
             'birth_date' => '1990-01-01',
             'kingdom' => 'Kingdom of Spain',
-            'equipment_id' => 1,
-            'faction_id' => 1
+            'equipment_id' => $this->insertedEquipmentIds[0],
+            'faction_id' => $this->insertedFactionIds[0]
         ];
 
-        // Crear una solicitud con los datos correctos
         $request = $this->createJsonRequest('POST', '/characters', $characterData);
-        
-        // Asegurarse de que el cuerpo de la solicitud se establece correctamente
         $requestBody = json_encode($characterData);
         $stream = (new StreamFactory())->createStream($requestBody);
         $request = $request->withBody($stream);
-        
-        // Procesar la solicitud
+
         $response = $app->handle($request);
 
-        // Obtener y decodificar la respuesta
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
-        
-        // Depuración
+
         echo "Status Code: " . $response->getStatusCode() . "\n";
         echo "Response Body: " . $payload . "\n";
-        
-        // Verificar la respuesta
+
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertArrayHasKey('character', $responseData);
         $this->assertArrayHasKey('message', $responseData);
         $this->assertEquals('El personaje se ha creado correctamente', $responseData['message']);
 
-        // Verificar que el personaje se creó correctamente en la base de datos
         $repository = $app->getContainer()->get(CharacterRepository::class);
         $createdCharacter = $repository->findById($responseData['character']['id']);
         $this->insertedCharacterIds[] = $createdCharacter->getId();
@@ -118,11 +137,11 @@ class CreateCharacterControllerTest extends TestCase
         $app = $this->getAppInstance();
 
         $invalidCharacterData = [
-            'name' => '', // Nombre vacío (inválido)
+            'name' => '',
             'birth_date' => '1990-01-01',
             'kingdom' => 'Kingdom of Spain',
-            'equipment_id' => 1,
-            'faction_id' => 1
+            'equipment_id' => $this->insertedEquipmentIds[0],
+            'faction_id' => $this->insertedFactionIds[0]
         ];
 
         $request = $this->createJsonRequest('POST', '/characters', $invalidCharacterData);
@@ -151,8 +170,8 @@ class CreateCharacterControllerTest extends TestCase
             'name' => 'John Doe',
             'birth_date' => '1990-01-01',
             // Falta kingdom
-            'equipment_id' => 1,
-            'faction_id' => 1
+            'equipment_id' => $this->insertedEquipmentIds[0],
+            'faction_id' => $this->insertedFactionIds[0]
         ];
 
         $request = $this->createJsonRequest('POST', '/characters', $incompleteCharacterData);
@@ -177,14 +196,12 @@ class CreateCharacterControllerTest extends TestCase
     {
         $app = $this->getAppInstance();
 
-        // Datos que pasarán la validación inicial pero fallarán en la validación del dominio
-        // Por ejemplo, un nombre demasiado largo que generará una CharacterValidationException
         $invalidCharacterData = [
-            'name' => str_repeat('a', 101), // Nombre con más de 100 caracteres
+            'name' => str_repeat('a', 101),
             'birth_date' => '1990-01-01',
             'kingdom' => 'Kingdom of Spain',
-            'equipment_id' => 1,
-            'faction_id' => 1
+            'equipment_id' => $this->insertedEquipmentIds[0],
+            'faction_id' => $this->insertedFactionIds[0]
         ];
 
         $request = $this->createJsonRequest('POST', '/characters', $invalidCharacterData);
@@ -192,14 +209,14 @@ class CreateCharacterControllerTest extends TestCase
 
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
-        
-        // Depuración
+
         echo "Status Code: " . $response->getStatusCode() . "\n";
         echo "Response Body: " . $payload . "\n";
 
         $this->assertEquals(500, $response->getStatusCode());
         $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals('El nombre no puede exceder los 100 caracteres', $responseData['error']);
+        $expectedMessage = CharacterValidationException::withNameLengthError()->getMessage();
+        $this->assertEquals($expectedMessage, $responseData['error']);
     }
 
     private function getAppInstance(): App
@@ -208,7 +225,6 @@ class CreateCharacterControllerTest extends TestCase
         $dotenv->load();
 
         $containerBuilder = new ContainerBuilder();
-
         $settings = require __DIR__ . '/../../../../config/definitions.php';
         $settings($containerBuilder);
 
@@ -234,15 +250,13 @@ class CreateCharacterControllerTest extends TestCase
         $stream = (new StreamFactory())->createStreamFromResource($handle);
         fwrite($handle, json_encode($data));
         rewind($handle);
-    
+
         $h = new Headers();
         foreach ($headers as $name => $value) {
             $h->addHeader($name, $value);
         }
-    
+
         $request = new SlimRequest($method, $uri, $h, [], [], $stream);
-        
         return $request->withParsedBody($data);
     }
 }
-

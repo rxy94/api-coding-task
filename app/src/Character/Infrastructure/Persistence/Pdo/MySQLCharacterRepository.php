@@ -4,7 +4,7 @@ namespace App\Character\Infrastructure\Persistence\Pdo;
 
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
-use App\Character\Infrastructure\Persistence\Pdo\Exception\CharacterNotFoundException;
+use App\Character\Domain\Exception\CharacterNotFoundException;
 use App\Character\Infrastructure\Persistence\Pdo\Exception\CharactersNotFoundException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
