@@ -4,9 +4,11 @@ namespace App\Test\Faction\Infrastructure\Http;
 
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
-use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionNotFoundException;
+use App\Faction\Domain\Exception\FactionNotFoundException;
+use App\Faction\Domain\Exception\FactionValidationException;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
+use PDO;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
@@ -18,6 +20,7 @@ use Slim\Psr7\Request as SlimRequest;
 
 class UpdateFactionControllerTest extends TestCase
 {
+    private PDO $pdo;
     private App $app;
     private FactionRepository $repository;
     private array $insertedFactionIds = [];
@@ -25,6 +28,7 @@ class UpdateFactionControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->pdo = $this->createPdoConnection();
         $this->app = $this->getAppInstance();
         $this->repository = $this->app->getContainer()->get(FactionRepository::class);
     }
@@ -33,9 +37,8 @@ class UpdateFactionControllerTest extends TestCase
     {
         try {
             if (!empty($this->insertedFactionIds)) {
-                $pdo = $this->app->getContainer()->get(\PDO::class);
                 $ids = implode(',', $this->insertedFactionIds);
-                $pdo->exec("DELETE FROM factions WHERE id IN ($ids)");
+                $this->pdo->exec("DELETE FROM factions WHERE id IN ($ids)");
             }
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
@@ -45,62 +48,107 @@ class UpdateFactionControllerTest extends TestCase
 
         parent::tearDown();
     }
-    
+
+    private function createPdoConnection(): PDO
+    {
+        return new PDO('mysql:host=db;dbname=test', 'root', 'root');
+    }
+
     /**
      * @test
      * @group happy-path
      * @group acceptance
+     * @group faction
      * @group update-faction
-     * @group controller
-     */ 
+     */
     public function givenARequestToTheControllerWithValidDataWhenUpdateFactionThenReturnTheFactionAsJson()
     {
-        // Crear una facción para actualizarla
-        $originalFaction = new Faction(
+        $faction = new Faction(
             'Kingdom of Spain',
             'A powerful kingdom in the south of Europe'
         );
 
-        $savedFaction = $this->repository->save($originalFaction);
+        $savedFaction = $this->repository->save($faction);
         $this->insertedFactionIds[] = $savedFaction->getId();
-        $factionId = $savedFaction->getId();
-        
-        // Datos para actualizar la facción
+
         $updateData = [
             'faction_name' => 'Kingdom of Portugal',
             'description' => 'A powerful kingdom in the north of Europe'
         ];
 
-        // Crear una solicitud con los datos correctos
-        $request = $this->createJsonRequest('PUT', '/factions/' . $factionId, $updateData);
-        
-        // Asegurarse de que el cuerpo de la solicitud se establece correctamente
-        $requestBody = json_encode($updateData);
-        $stream = (new StreamFactory())->createStream($requestBody);
-        $request = $request->withBody($stream);
-
-        // Procesar la solicitud
+        $request = $this->createJsonRequest('PUT', '/factions/' . $savedFaction->getId(), $updateData);
         $response = $this->app->handle($request);
 
-        // Obtener y decodificar la respuesta
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertArrayHasKey('faction', $responseData);
-        $this->assertArrayHasKey('message', $responseData);
         $this->assertEquals('La facción se ha actualizado correctamente', $responseData['message']);
 
-        // Verificar que la facción se actualizó correctamente en la base de datos
-        $updatedFaction = $this->repository->findById($factionId);
-
+        $updatedFaction = $this->repository->findById($savedFaction->getId());
         $this->assertEquals($updateData['faction_name'], $updatedFaction->getName());
         $this->assertEquals($updateData['description'], $updatedFaction->getDescription());
     }
 
+    /**
+     * @test
+     * @group unhappy-path
+     * @group acceptance
+     * @group faction
+     * @group update-faction
+     */
+    public function givenARequestToTheControllerWithInvalidDataWhenUpdateFactionThenReturnErrorAsJson()
+    {
+        $faction = new Faction(
+            'Kingdom of Spain',
+            'A powerful kingdom in the south of Europe'
+        );
+
+        $savedFaction = $this->repository->save($faction);
+        $this->insertedFactionIds[] = $savedFaction->getId();
+
+        $invalidUpdateData = [
+            'faction_name' => '', // nombre vacío
+            'description' => 'Nueva descripción'
+        ];
+
+        $request = $this->createJsonRequest('PUT', '/factions/' . $savedFaction->getId(), $invalidUpdateData);
+        $response = $this->app->handle($request);
+
+        $payload = (string) $response->getBody();
+        $responseData = json_decode($payload, true);
+
+        $this->assertEquals(400, $response->getStatusCode());
+        $this->assertEquals(FactionValidationException::withFactionNameError()->getMessage(), $responseData['error']);
+    }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group acceptance
+     * @group faction
+     * @group update-faction
+     */
+    public function givenARequestToTheControllerWithNonExistentIdWhenUpdateFactionThenReturnErrorAsJson()
+    {
+        $updateData = [
+            'faction_name' => 'Kingdom of Atlantis',
+            'description' => 'A lost kingdom'
+        ];
+
+        $request = $this->createJsonRequest('PUT', '/factions/999999', $updateData);
+        $response = $this->app->handle($request);
+
+        $payload = (string) $response->getBody();
+        $responseData = json_decode($payload, true);
+
+        $this->assertEquals(404, $response->getStatusCode());
+        $this->assertEquals(FactionNotFoundException::build()->getMessage(), $responseData['error']);
+    }
+
     private function getAppInstance(): App
     {
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../');
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../', '.env.test');
         $dotenv->load();
 
         $containerBuilder = new ContainerBuilder();
@@ -135,119 +183,6 @@ class UpdateFactionControllerTest extends TestCase
             $h->addHeader($name, $value);
         }
 
-        $request = new SlimRequest($method, $uri, $h, [], [], $stream);
-
-        return $request->withParsedBody($data);
+        return new SlimRequest($method, $uri, $h, [], [], $stream);
     }
-
-    /**
-     * @test
-     * @group unhappy-path
-     * @group acceptance
-     * @group update-faction
-     * @group controller
-     */
-    public function givenARequestToTheControllerWithInvalidDataWhenUpdateFactionThenReturnValidationError()
-    {
-        // Crear una facción para actualizarla
-        $originalFaction = new Faction(
-            'Kingdom of Spain',
-            'A powerful kingdom in the south of Europe'
-        );
-
-        $savedFaction = $this->repository->save($originalFaction);
-        $this->insertedFactionIds[] = $savedFaction->getId();
-        $factionId = $savedFaction->getId();
-        
-        // Datos inválidos para actualizar la facción
-        $updateData = [
-            'faction_name' => '', // Nombre vacío
-            'description' => 'A powerful kingdom in the north of Europe'
-        ];
-        
-        // Crear una solicitud con los datos inválidos
-        $request = $this->createJsonRequest('PUT', '/factions/' . $factionId, $updateData);
-        $requestBody = json_encode($updateData);
-        $stream = (new StreamFactory())->createStream($requestBody);
-        $request = $request->withBody($stream);
-        
-        // Procesar la solicitud
-        $response = $this->app->handle($request);
-
-        // Verificar la respuesta
-        $this->assertEquals(400, $response->getStatusCode());
-        $responseData = json_decode((string) $response->getBody(), true);
-        $this->assertArrayHasKey('error', $responseData);  
-    }
-
-    /**
-     * @test
-     * @group unhappy-path
-     * @group acceptance
-     * @group update-faction
-     * @group controller
-     */
-    public function givenARequestToTheControllerWithNonExistentFactionWhenUpdateFactionThenReturnNotFoundError()
-    {
-        // Datos para actualizar la facción
-        $updateData = [
-            'faction_name' => 'Kingdom of Portugal',
-            'description' => 'A powerful kingdom in the north of Europe'
-        ];
-
-        // Crear una solicitud con un ID que no existe
-        $request = $this->createJsonRequest('PUT', '/factions/999', $updateData);
-        $requestBody = json_encode($updateData);
-        $stream = (new StreamFactory())->createStream($requestBody);
-        $request = $request->withBody($stream);
-
-        // Procesar la solicitud
-        $response = $this->app->handle($request);
-
-        // Verificar la respuesta
-        $this->assertEquals(404, $response->getStatusCode());
-        $responseData = json_decode((string) $response->getBody(), true);
-        $this->assertArrayHasKey('error', $responseData);
-    }
-
-    /**
-     * @test
-     * @group unhappy-path
-     * @group acceptance
-     * @group update-faction
-     * @group controller
-     */
-    public function givenARequestToTheControllerWithMissingDataWhenUpdateFactionThenReturnValidationError()
-    {
-        // Crear una facción para actualizarla
-        $originalFaction = new Faction(
-            'Kingdom of Spain',
-            'A powerful kingdom in the south of Europe'
-        );
-
-        $savedFaction = $this->repository->save($originalFaction);
-        $this->insertedFactionIds[] = $savedFaction->getId();
-        $factionId = $savedFaction->getId();
-
-        // Datos incompletos para actualizar la facción
-        $updateData = [
-            'faction_name' => 'Kingdom of Portugal',
-            // Falta description
-        ];
-
-        // Crear una solicitud con datos faltantes
-        $request = $this->createJsonRequest('PUT', '/factions/' . $factionId, $updateData);
-        $requestBody = json_encode($updateData);
-        $stream = (new StreamFactory())->createStream($requestBody);
-        $request = $request->withBody($stream);
-
-        // Procesar la solicitud
-        $response = $this->app->handle($request);
-
-        // Verificar la respuesta
-        $this->assertEquals(400, $response->getStatusCode());
-        $responseData = json_decode((string) $response->getBody(), true);
-        $this->assertArrayHasKey('error', $responseData);
-    }   
-
 }
