@@ -18,7 +18,7 @@ use Slim\Psr7\Factory\StreamFactory;
 use Slim\Psr7\Request as SlimRequest;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class ReadCharacterControllerTest extends TestCase
+class ReadAllCharactersControllerTest extends TestCase
 {
     private PDO $pdo;
     private array $insertedCharacterIds = [];
@@ -36,8 +36,10 @@ class ReadCharacterControllerTest extends TestCase
                 $ids = implode(',', $this->insertedCharacterIds);
                 $this->pdo->exec("DELETE FROM characters WHERE id IN ($ids)");
             }
+
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+
         } finally {
             $this->insertedCharacterIds = [];
         }
@@ -56,30 +58,70 @@ class ReadCharacterControllerTest extends TestCase
      * @group acceptance
      * @group character
      */
-    public function givenARequestToTheControllerWithOneCharacterIdWhenReadCharacterThenReturnTheCharacterAsJson()
+    public function givenARequestToTheControllerWhenReadAllCharactersThenReturnAllCharactersAsJson()
     {
         $app = $this->getAppInstance();
 
         $repository = $app->getContainer()->get(CharacterRepository::class);
 
-        $expectedCharacter = new Character(
-            'John Doe',
-            '1990-01-01',
-            'Kingdom of Spain',
-            1,
-            1
-        );
+        $characters = [
+            new Character(
+                'John Doe',
+                '1990-01-01',
+                'Kingdom of Spain',
+                1,
+                1
+            ),
+            new Character(
+                'Jane Smith',
+                '1992-05-15',
+                'Kingdom of France',
+                1,
+                1
+            )
+        ];
 
-        $savedCharacter = $repository->save($expectedCharacter);
-        $this->insertedCharacterIds[] = $savedCharacter->getId();
+        $savedCharacters = [];
+        foreach ($characters as $character) {
+            $savedCharacter = $repository->save($character);
+            $savedCharacters[] = $savedCharacter;
+            $this->insertedCharacterIds[] = $savedCharacter->getId();
+        }
 
-        $request = $this->createRequest('GET', '/characters/' . $savedCharacter->getId());
+        $request = $this->createRequest('GET', '/characters');
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
         $serializedPayload = json_encode([
-            'character' => CharacterToArrayTransformer::transform($savedCharacter),
-            'message' => 'Personaje obtenido correctamente'
+            'characters' => array_map(
+                function (Character $character) {
+                    return CharacterToArrayTransformer::transform($character);
+                },
+                $savedCharacters
+            ),
+            'message' => 'Personajes obtenidos correctamente'
+        ]);
+
+        $this->assertEquals($serializedPayload, $payload);
+    }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group acceptance
+     * @group character
+     */
+    public function givenARequestToTheControllerWhenNoCharactersExistThenReturnEmptyArray()
+    {
+        $app = $this->getAppInstance();
+
+        $request = $this->createRequest('GET', '/characters');
+        $response = $app->handle($request);
+
+        $payload = (string) $response->getBody();
+        $serializedPayload = json_encode([
+            'characters' => [],
+            'message' => 'Personajes obtenidos correctamente'
         ]);
 
         $this->assertEquals($serializedPayload, $payload);

@@ -2,7 +2,11 @@
 
 namespace App\Test\Character\Infrastructure\Http;
 
+use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
+use App\Character\Domain\Exception\CharacterValidationException;
+use PDO;
+
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
@@ -16,10 +20,42 @@ use Slim\Psr7\Request as SlimRequest;
 
 class CreateCharacterControllerTest extends TestCase
 {
+    private PDO $pdo;
+    private array $insertedCharacterIds = [];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->pdo = $this->createPdoConnection();
+    }
+
+    protected function tearDown(): void
+    {
+        try {
+            if (!empty($this->insertedCharacterIds)) {
+                $ids = implode(',', $this->insertedCharacterIds);
+                $this->pdo->exec("DELETE FROM characters WHERE id IN ($ids)");
+            }
+        } catch (\Exception $e) {
+            error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+        } finally {
+            $this->insertedCharacterIds = [];
+        }
+
+        parent::tearDown();
+    }
+
+    private function createPdoConnection(): PDO
+    {
+        return new PDO('mysql:host=db;dbname=test', 'root', 'root');
+    }
+
     /**
      * @test
      * @group happy-path
      * @group acceptance
+     * @group create-character
+     * @group character 
      */
     public function givenARequestToTheControllerWithValidDataWhenCreateCharacterThenReturnTheCharacterAsJson()
     {
@@ -61,6 +97,7 @@ class CreateCharacterControllerTest extends TestCase
         // Verificar que el personaje se creó correctamente en la base de datos
         $repository = $app->getContainer()->get(CharacterRepository::class);
         $createdCharacter = $repository->findById($responseData['character']['id']);
+        $this->insertedCharacterIds[] = $createdCharacter->getId();
 
         $this->assertEquals($characterData['name'], $createdCharacter->getName());
         $this->assertEquals($characterData['birth_date'], $createdCharacter->getBirthDate());
@@ -73,6 +110,8 @@ class CreateCharacterControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
+     * @group create-character
+     * @group character 
      */
     public function givenARequestToTheControllerWithInvalidDataWhenCreateCharacterThenReturnErrorAsJson()
     {
@@ -101,6 +140,8 @@ class CreateCharacterControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
+     * @group create-character
+     * @group character 
      */
     public function givenARequestToTheControllerWithMissingFieldsWhenCreateCharacterThenReturnErrorAsJson()
     {
@@ -129,6 +170,8 @@ class CreateCharacterControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
+     * @group create-character
+     * @group character 
      */
     public function givenARequestToTheControllerWithValidationExceptionWhenCreateCharacterThenReturnErrorAsJson()
     {
@@ -161,7 +204,7 @@ class CreateCharacterControllerTest extends TestCase
 
     private function getAppInstance(): App
     {
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../');
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../', '.env.test');
         $dotenv->load();
 
         $containerBuilder = new ContainerBuilder();
@@ -201,6 +244,5 @@ class CreateCharacterControllerTest extends TestCase
         
         return $request->withParsedBody($data);
     }
-    
 }
 

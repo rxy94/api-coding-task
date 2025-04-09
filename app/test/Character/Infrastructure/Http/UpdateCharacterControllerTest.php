@@ -6,6 +6,8 @@ use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterValidationException;
 use App\Character\Infrastructure\Persistence\Pdo\Exception\CharacterNotFoundException;
+use PDO;
+
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
@@ -19,10 +21,41 @@ use Slim\Psr7\Request as SlimRequest;
 
 class UpdateCharacterControllerTest extends TestCase
 {
+    private PDO $pdo;
+    private array $insertedCharacterIds = [];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->pdo = $this->createPdoConnection();
+    }
+
+    protected function tearDown(): void
+    {
+        try {
+            if (!empty($this->insertedCharacterIds)) {
+                $ids = implode(',', $this->insertedCharacterIds);
+                $this->pdo->exec("DELETE FROM characters WHERE id IN ($ids)");
+            }
+        } catch (\Exception $e) {
+            error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+        } finally {
+            $this->insertedCharacterIds = [];
+        }
+
+        parent::tearDown();
+    }
+
+    private function createPdoConnection(): PDO
+    {
+        return new PDO('mysql:host=db;dbname=test', 'root', 'root');
+    }
+
     /**
      * @test
      * @group happy-path
      * @group acceptance
+     * @group character
      * @group update-character
      */
     public function givenARequestToTheControllerWithValidDataWhenUpdateCharacterThenReturnTheCharacterAsJson()
@@ -39,6 +72,7 @@ class UpdateCharacterControllerTest extends TestCase
             1
         );
         $savedCharacter = $repository->save($originalCharacter);
+        $this->insertedCharacterIds[] = $savedCharacter->getId();
         $characterId = $savedCharacter->getId();
 
         // Datos para actualizar el personaje
@@ -86,6 +120,8 @@ class UpdateCharacterControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
+     * @group character
+     * @group update-character
      */
     public function givenARequestToTheControllerWithInvalidDataWhenUpdateCharacterThenReturnErrorAsJson()
     {
@@ -101,6 +137,7 @@ class UpdateCharacterControllerTest extends TestCase
             1
         );
         $savedCharacter = $repository->save($originalCharacter);
+        $this->insertedCharacterIds[] = $savedCharacter->getId();
         $characterId = $savedCharacter->getId();
 
         // Datos inválidos para actualizar el personaje
@@ -127,6 +164,7 @@ class UpdateCharacterControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
+     * @group character
      * @group update-character
      */
     public function givenARequestToTheControllerWithMissingFieldsWhenUpdateCharacterThenReturnErrorAsJson()
@@ -143,6 +181,7 @@ class UpdateCharacterControllerTest extends TestCase
             1
         );
         $savedCharacter = $repository->save($originalCharacter);
+        $this->insertedCharacterIds[] = $savedCharacter->getId();
         $characterId = $savedCharacter->getId();
 
         // Datos incompletos para actualizar el personaje
@@ -161,13 +200,13 @@ class UpdateCharacterControllerTest extends TestCase
         $responseData = json_decode($payload, true);
 
         $this->assertEquals(400, $response->getStatusCode());
-
     }
 
     /**
      * @test
      * @group unhappy-path
      * @group acceptance
+     * @group character
      * @group update-character
      */
     public function givenARequestToTheControllerWithNonExistentIdWhenUpdateCharacterThenReturnErrorAsJson()
@@ -199,7 +238,7 @@ class UpdateCharacterControllerTest extends TestCase
 
     private function getAppInstance(): App
     {
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../');
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../', '.env.test');
         $dotenv->load();
 
         $containerBuilder = new ContainerBuilder();

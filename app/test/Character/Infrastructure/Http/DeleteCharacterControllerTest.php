@@ -23,6 +23,7 @@ class DeleteCharacterControllerTest extends TestCase
      * @group happy-path
      * @group acceptance
      * @group delete-character
+     * @group character
      */
     public function givenARequestToTheControllerWithValidIdWhenDeleteCharacterThenReturnSuccessMessage()
     {
@@ -69,6 +70,7 @@ class DeleteCharacterControllerTest extends TestCase
      * @group unhappy-path
      * @group acceptance
      * @group delete-character
+     * @group character
      */
     public function givenARequestToTheControllerWithNonExistentIdWhenDeleteCharacterThenReturnErrorAsJson()
     {

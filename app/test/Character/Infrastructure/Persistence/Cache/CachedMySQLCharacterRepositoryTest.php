@@ -11,6 +11,7 @@ use PDO;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Redis;
+
 class CachedMySQLCharacterRepositoryTest extends TestCase
 {
     private Redis $redis;
@@ -52,6 +53,7 @@ class CachedMySQLCharacterRepositoryTest extends TestCase
      * @test
      * @group integration
      * @group character-cache
+     * @group character
      */
     public function testGetCharacterById(): void
     {
@@ -98,6 +100,7 @@ class CachedMySQLCharacterRepositoryTest extends TestCase
      * @test
      * @group integration
      * @group character-cache
+     * @group character
      */
     public function testGetAllCharacters(): void
     {
@@ -147,6 +150,7 @@ class CachedMySQLCharacterRepositoryTest extends TestCase
      * @test
      * @group integration
      * @group character-cache
+     * @group character
      */
     public function testDeleteCharacter(): void
     {
