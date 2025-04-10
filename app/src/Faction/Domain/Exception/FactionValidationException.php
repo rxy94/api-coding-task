@@ -2,8 +2,6 @@
 
 namespace App\Faction\Domain\Exception;
 
-use App\Shared\Domain\Exception\ValidationExceptionInterface;
-
 class FactionValidationException extends \DomainException
 {
     private const MESSAGE = "Error de validación de la facción";
@@ -20,27 +18,27 @@ class FactionValidationException extends \DomainException
         parent::__construct($message);
     }
 
-    public static function withFactionNameError(): static
+    public static function withFactionNameError(): self
     {
         return new self(self::FACTION_NAME_ERROR);
     }
 
-    public static function withFactionNameLengthError(): static
+    public static function withFactionNameLengthError(): self
     {
         return new self(self::FACTION_NAME_LENGTH_ERROR);
     }
 
-    public static function withDescriptionError(): static
+    public static function withDescriptionError(): self
     {
         return new self(self::DESCRIPTION_ERROR);
     }
     
-    public static function withDescriptionLengthError(): static
+    public static function withDescriptionLengthError(): self
     {
         return new self(self::DESCRIPTION_LENGTH_ERROR);
     }
 
-    public static function withIdNonPositive(): static
+    public static function withIdNonPositive(): self
     {
         return new self(self::ID_NON_POSITIVE);
     }

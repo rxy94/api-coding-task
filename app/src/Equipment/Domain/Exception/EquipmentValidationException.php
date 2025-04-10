@@ -22,37 +22,37 @@ class EquipmentValidationException extends \DomainException
         parent::__construct($message);
     }
 
-    public static function withNameError(): static
+    public static function withNameError(): self
     {
         return new self(self::NAME_ERROR);
     }
 
-    public static function withNameLengthError(): static
+    public static function withNameLengthError(): self
     {
         return new self(self::NAME_LENGTH_ERROR);
     }
 
-    public static function withTypeError(): static
+    public static function withTypeError(): self
     {
         return new self(self::TYPE_ERROR);
     }
 
-    public static function withTypeErrorLengthError(): static
+    public static function withTypeErrorLengthError(): self
     {
         return new self(self::TYPE_LENGTH_ERROR);
     }
 
-    public static function withMadeByError(): static
+    public static function withMadeByError(): self
     {
         return new self(self::MADE_BY_ERROR);
     }
 
-    public static function withMadeByLengthError(): static
+    public static function withMadeByLengthError(): self
     {
         return new self(self::MADE_BY_LENGTH_ERROR);
     }
 
-    public static function withIdNonPositive(): static
+    public static function withIdNonPositive(): self
     {
         return new self(self::ID_NON_POSITIVE);
     }

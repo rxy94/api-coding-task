@@ -12,32 +12,39 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class UpdateFactionController
 {
-    private UpdateFactionUseCase $updateFactionUseCase;
-    private FactionToArrayTransformer $factionToArrayTransformer;
+    private const SUCCESS_MESSAGE = 'Facción actualizada correctamente';
+    private const ERROR_MESSAGE = 'Error al actualizar la facción';
 
     public function __construct(
-        UpdateFactionUseCase $updateFactionUseCase,
-        FactionToArrayTransformer $factionToArrayTransformer
+        private UpdateFactionUseCase $updateFactionUseCase,
     ) {
-        $this->updateFactionUseCase = $updateFactionUseCase;
-        $this->factionToArrayTransformer = $factionToArrayTransformer;
+    }
+
+    public static function getSuccessMessage(): string
+    {
+        return self::SUCCESS_MESSAGE;
+    }
+    
+    public static function getErrorMessage(): string
+    {
+        return self::ERROR_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
     {
         $data = $request->getParsedBody();
 
-        try {
-            $id = (int) $args['id'];
-            $data = json_decode($request->getBody()->getContents(), true);
+        $requiredFields = ['faction_name', 'description'];
 
-            if (!isset($data['faction_name']) || !isset($data['description'])) {
-                $response->getBody()->write(json_encode([
-                    'error' => 'Los campos faction_name y description son requeridos'
-                ]));
-
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field])) {
+                $response->getBody()->write(json_encode(['error' => "Campo requerido: {$field}"]));
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }
+        }
+
+        try {
+            $id = (int) $args['id'];
 
             $useCaseRequest = new UpdateFactionUseCaseRequest(
                 id: $id,
@@ -49,7 +56,7 @@ class UpdateFactionController
 
             $response->getBody()->write(json_encode([
                 'faction' => FactionToArrayTransformer::transform($useCaseResponse->getFaction()),
-                'message' => 'La facción se ha actualizado correctamente'
+                'message' => self::SUCCESS_MESSAGE
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
@@ -70,7 +77,7 @@ class UpdateFactionController
 
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
-                'error' => 'Error inesperado',
+                'error' => self::ERROR_MESSAGE,
                 'message' => $e->getMessage()
             ]));
 

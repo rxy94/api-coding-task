@@ -12,30 +12,39 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class UpdateCharacterController
 {
-    private UpdateCharacterUseCase $updateCharacterUseCase;
-    private CharacterToArrayTransformer $characterToArrayTransformer;
+    private const SUCCESS_MESSAGE = 'Personaje actualizado correctamente';
+    private const ERROR_MESSAGE = 'Error al actualizar el personaje';
 
     public function __construct(
-        UpdateCharacterUseCase $updateCharacterUseCase,
-        CharacterToArrayTransformer $characterToArrayTransformer
+        private UpdateCharacterUseCase $updateCharacterUseCase,
     ) {
-        $this->updateCharacterUseCase = $updateCharacterUseCase;
-        $this->characterToArrayTransformer = $characterToArrayTransformer;
+    }
+
+    public static function getSuccessMessage(): string
+    {
+        return self::SUCCESS_MESSAGE;
+    }
+
+    public static function getErrorMessage(): string
+    {
+        return self::ERROR_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
     {
-        try {
-            $id = (int) $args['id'];
-            $data = json_decode($request->getBody()->getContents(), true);
+        $data = $request->getParsedBody();
 
-            if (!isset($data['name']) || !isset($data['faction_id']) || !isset($data['equipment_id'])) {
-                $response->getBody()->write(json_encode([
-                    'error' => 'Los campos name, faction_id y equipment_id son requeridos'
-                ]));
+        $requiredFields = ['name', 'faction_id', 'equipment_id'];
 
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field])) {
+                $response->getBody()->write(json_encode(['error' => "Campo requerido: {$field}"]));
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }
+        }
+
+        try {
+            $id = (int) $args['id'];
 
             $useCaseRequest = new UpdateCharacterUseCaseRequest(
                 id: $id,
@@ -49,11 +58,11 @@ class UpdateCharacterController
             $character = $this->updateCharacterUseCase->execute($useCaseRequest);
 
             $response->getBody()->write(json_encode([
-                'character' => $this->characterToArrayTransformer->transform($character),
-                'message' => 'El personaje se ha actualizado correctamente'
+                'character' => CharacterToArrayTransformer::transform($character),
+                'message' => self::SUCCESS_MESSAGE
             ]));
 
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
 
         } catch (CharacterValidationException $e) {
             $response->getBody()->write(json_encode([
@@ -71,7 +80,7 @@ class UpdateCharacterController
 
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
-                'error' => 'Error al actualizar el personaje',
+                'error' => self::ERROR_MESSAGE,
                 'message' => $e->getMessage()
             ]));
 

@@ -10,8 +10,16 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class ReadCharacterByIdController {
 
-    public function __construct(private ReadCharacterByIdUseCase $readCharacterByIdUseCase)
+    private const SUCCESS_MESSAGE = 'Personaje obtenido correctamente';
+
+    public function __construct(
+        private ReadCharacterByIdUseCase $readCharacterByIdUseCase
+    ) {
+    }
+
+    public static function getSuccessMessage(): string
     {
+        return self::SUCCESS_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
@@ -23,7 +31,7 @@ class ReadCharacterByIdController {
 
             $response->getBody()->write(json_encode([
                 'character' => CharacterToArrayTransformer::transform($character),
-                'message' => 'Personaje obtenido correctamente'
+                'message' => self::SUCCESS_MESSAGE
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(200);

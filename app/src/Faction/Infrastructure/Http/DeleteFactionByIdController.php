@@ -9,8 +9,22 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class DeleteFactionByIdController
 {
-    public function __construct(private DeleteFactionUseCase $deleteFactionUseCase)
+    private const SUCCESS_MESSAGE = 'Facción eliminada correctamente';
+    private const ERROR_MESSAGE = 'Error al eliminar la facción';
+
+    public function __construct(
+        private DeleteFactionUseCase $deleteFactionUseCase
+    ) {
+    }
+
+    public static function getSuccessMessage(): string
     {
+        return self::SUCCESS_MESSAGE;
+    }
+
+    public static function getErrorMessage(): string
+    {
+        return self::ERROR_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
@@ -20,21 +34,22 @@ class DeleteFactionByIdController
             $this->deleteFactionUseCase->execute($id);
 
             $response->getBody()->write(json_encode([
-                'message' => 'Facción eliminada correctamente'
+                'message' => self::SUCCESS_MESSAGE
             ]));
 
             return $response->withHeader('Content-Type', 'application/json');
 
         } catch (FactionNotFoundException $e) {
             $response->getBody()->write(json_encode([
-                'error' => $e->getMessage()
+                'error' => self::ERROR_MESSAGE,
+                'message' => $e->getMessage()
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
             
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
-                'error' => 'Error al eliminar la facción',
+                'error' => self::ERROR_MESSAGE,
                 'message' => $e->getMessage()
             ]));
 

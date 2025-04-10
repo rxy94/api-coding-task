@@ -9,8 +9,7 @@ class CreateEquipmentUseCase
 {
     public function __construct(
         private EquipmentRepository $equipmentRepository
-    )
-    {
+    ) {
     }
     
     public function execute(

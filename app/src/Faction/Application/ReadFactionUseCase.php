@@ -6,8 +6,9 @@ use App\Faction\Domain\FactionRepository;
 
 class ReadFactionUseCase {
 
-    public function __construct(private FactionRepository $repository)
-    {
+    public function __construct(
+        private FactionRepository $repository
+    ) {
     }
 
     public function execute(): array

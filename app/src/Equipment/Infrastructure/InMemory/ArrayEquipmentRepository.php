@@ -16,7 +16,6 @@ class ArrayEquipmentRepository implements EquipmentRepository
     public function findById(int $id): ?Equipment
     {
         if (!isset($this->equipments[$id])) {
-            //throw EquipmentNotFoundException::withId($id);
             return null;
         }
 

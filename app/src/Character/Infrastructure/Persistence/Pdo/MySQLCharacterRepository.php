@@ -5,7 +5,6 @@ namespace App\Character\Infrastructure\Persistence\Pdo;
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterNotFoundException;
-use App\Character\Infrastructure\Persistence\Pdo\Exception\CharactersNotFoundException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
@@ -16,8 +15,9 @@ use PDO;
  */
 class MySQLCharacterRepository implements CharacterRepository
 {
-    public function __construct(private PDO $pdo)
-    {
+    public function __construct(
+        private PDO $pdo
+    ) {
     }
 
     public function findById(int $id): ?Character
@@ -49,7 +49,7 @@ class MySQLCharacterRepository implements CharacterRepository
             return $characters;
 
         } catch (\PDOException $e) {
-            throw CharactersNotFoundException::build();
+            throw CharacterNotFoundException::build();
 
         }
     }
@@ -99,14 +99,9 @@ class MySQLCharacterRepository implements CharacterRepository
                 WHERE id = :id';
         
         $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute([
-            'name'         => $character->getName(),
-            'birth_date'   => $character->getBirthDate(),
-            'kingdom'      => $character->getKingdom(),
-            'equipment_id' => $character->getEquipmentId(),
-            'faction_id'   => $character->getFactionId(),
-            'id'           => $character->getId(),
-        ]);
+        $result = $stmt->execute(
+            MySQLCharacterToArrayTransformer::transform($character)
+        );
 
         if (!$result) {
             throw RowUpdateFailedException::build();

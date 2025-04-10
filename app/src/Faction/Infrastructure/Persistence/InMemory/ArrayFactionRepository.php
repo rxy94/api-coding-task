@@ -13,6 +13,15 @@ class ArrayFactionRepository implements FactionRepository
     ) {
     }
 
+    public function findById(int $id): ?Faction
+    {
+        if (!isset($this->factions[$id])) {
+            return null;
+        }
+
+        return $this->factions[$id];
+    }
+
     public function save(Faction $faction): Faction
     {
         if ($faction->getId() !== null) {
@@ -31,15 +40,6 @@ class ArrayFactionRepository implements FactionRepository
         return $faction;
     }
 
-    public function findById(int $id): ?Faction
-    {
-        if (!isset($this->factions[$id])) {
-            return null;
-        }
-
-        return $this->factions[$id];
-    }
-
     public function findAll(): array
     {
         return $this->factions;
@@ -48,6 +48,7 @@ class ArrayFactionRepository implements FactionRepository
     public function delete(Faction $faction): bool
     {
         unset($this->factions[$faction->getId()]);
+        
         return true;
     }
     

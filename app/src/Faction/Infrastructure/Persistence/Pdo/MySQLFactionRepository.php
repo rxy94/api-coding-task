@@ -2,10 +2,9 @@
 
 namespace App\Faction\Infrastructure\Persistence\Pdo;
 
-use App\Faction\Domain\Exception\FactionNotFoundException;
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
-use App\Faction\Infrastructure\Persistence\Pdo\Exception\FactionsNotFoundException;
+use App\Faction\Domain\Exception\FactionNotFoundException;
 use App\Faction\Infrastructure\Persistence\Pdo\MySQLFactionFactory;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
@@ -14,8 +13,9 @@ use PDO;
 
 class MySQLFactionRepository implements FactionRepository 
 {
-    public function __construct(private PDO $pdo) 
-    {
+    public function __construct(
+        private PDO $pdo
+    ) {
     }
 
     public function findById(int $id): ?Faction 
@@ -48,7 +48,7 @@ class MySQLFactionRepository implements FactionRepository
             return $factions;
 
         } catch (\PDOException $e) {
-            throw FactionsNotFoundException::build();
+            throw FactionNotFoundException::build();
         }
     }
 
@@ -76,13 +76,11 @@ class MySQLFactionRepository implements FactionRepository
             throw RowInsertionFailedException::build();
         }
 
-        return MySQLFactionFactory::buildFromArray(
-            [
-                'id' => $this->pdo->lastInsertId(),
-                'faction_name' => $faction->getName(),
-                'description' => $faction->getDescription()
-            ]
-        );
+        return MySQLFactionFactory::buildFromArray([
+            'id'           => $this->pdo->lastInsertId(),
+            'faction_name' => $faction->getName(),
+            'description'  => $faction->getDescription()
+        ]);
     }
 
     private function update(Faction $faction): Faction 

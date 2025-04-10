@@ -6,8 +6,9 @@ use App\Equipment\Domain\EquipmentRepository;
 
 class ReadEquipmentUseCase {
 
-    public function __construct(private EquipmentRepository $repository)
-    {
+    public function __construct(
+        private EquipmentRepository $repository
+    ) {
     }
 
     public function execute(): array

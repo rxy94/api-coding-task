@@ -9,8 +9,22 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class DeleteEquipmentByIdController
 {
-    public function __construct(private DeleteEquipmentUseCase $deleteEquipmentUseCase)
+    private const SUCCESS_MESSAGE = 'Equipo eliminado correctamente';
+    private const ERROR_MESSAGE = 'Error al eliminar el equipo';
+
+    public function __construct(
+        private DeleteEquipmentUseCase $deleteEquipmentUseCase
+    ) {
+    }
+
+    public static function getSuccessMessage(): string
     {
+        return self::SUCCESS_MESSAGE;
+    }
+
+    public static function getErrorMessage(): string
+    {
+        return self::ERROR_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
@@ -20,21 +34,22 @@ class DeleteEquipmentByIdController
             $this->deleteEquipmentUseCase->execute($id);
 
             $response->getBody()->write(json_encode([
-                'message' => 'Equipamiento eliminado correctamente'
+                'message' => self::SUCCESS_MESSAGE
             ]));
 
             return $response->withHeader('Content-Type', 'application/json');
 
         } catch (EquipmentNotFoundException $e) {
             $response->getBody()->write(json_encode([
-                'error' => $e->getMessage()
+                'error' => self::ERROR_MESSAGE,
+                'message' => $e->getMessage()
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
             
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
-                'error' => 'Error al eliminar el equipamiento',
+                'error' => self::ERROR_MESSAGE,
                 'message' => $e->getMessage()
             ]));
 

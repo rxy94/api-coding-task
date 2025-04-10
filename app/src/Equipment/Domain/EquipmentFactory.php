@@ -9,8 +9,7 @@ class EquipmentFactory
         string $type,
         string $made_by,
         ?int $id = null
-    ): Equipment
-    {
+    ): Equipment {
         return new Equipment(
             $name,
             $type,

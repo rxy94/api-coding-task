@@ -10,10 +10,10 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class ReadEquipmentByIdController
 {
-    private const SUCCESS_MESSAGE = 'Equipamiento encontrado correctamente';
+    private const SUCCESS_MESSAGE = 'Equipo encontrado correctamente';
 
     public function __construct(
-        private ReadEquipmentByIdUseCase $useCase
+        private ReadEquipmentByIdUseCase $readEquipmentByIdUseCase
     ) {
     }
 
@@ -27,7 +27,7 @@ class ReadEquipmentByIdController
         $id = (int) $args['id'];
 
         try {
-            $equipment = $this->useCase->execute($id);
+            $equipment = $this->readEquipmentByIdUseCase->execute($id);
 
             $response->getBody()->write(json_encode([
                 'equipment' => EquipmentToArrayTransformer::transform($equipment),

@@ -5,7 +5,6 @@ namespace App\Equipment\Infrastructure\Persistence\Pdo;
 use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\Exception\EquipmentNotFoundException;
-use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentsNotFoundException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
@@ -16,8 +15,9 @@ use PDO;
  */
 class MySQLEquipmentRepository implements EquipmentRepository
 {
-    public function __construct(private PDO $pdo)
-    {
+    public function __construct(
+        private PDO $pdo
+    ) {
     }
 
     public function findById(int $id): ?Equipment
@@ -49,7 +49,7 @@ class MySQLEquipmentRepository implements EquipmentRepository
             return $equipments;
 
         } catch (\PDOException $e) {
-            throw EquipmentsNotFoundException::build();
+            throw EquipmentNotFoundException::build();
         }
     }
 
@@ -77,14 +77,12 @@ class MySQLEquipmentRepository implements EquipmentRepository
             throw RowInsertionFailedException::build();
         }
 
-        return MySQLEquipmentFactory::buildFromArray(
-            [
-                'id'      => $this->pdo->lastInsertId(),
-                'name'    => $equipment->getName(),
-                'type'    => $equipment->getType(),
-                'made_by' => $equipment->getMadeBy(),
-            ]
-        );
+        return MySQLEquipmentFactory::buildFromArray([
+            'id'      => $this->pdo->lastInsertId(),
+            'name'    => $equipment->getName(),
+            'type'    => $equipment->getType(),
+            'made_by' => $equipment->getMadeBy(),
+        ]);
     }
 
     private function update(Equipment $equipment): Equipment

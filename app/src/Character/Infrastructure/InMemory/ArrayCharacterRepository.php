@@ -5,7 +5,6 @@ namespace App\Character\Infrastructure\InMemory;
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterFactory;
 use App\Character\Domain\CharacterRepository;
-use App\Character\Domain\Exception\CharacterNotFoundException;
 
 class ArrayCharacterRepository implements CharacterRepository
 {
@@ -17,7 +16,6 @@ class ArrayCharacterRepository implements CharacterRepository
     public function findById(int $id): ?Character
     {
         if (!isset($this->characters[$id])) {
-            //throw CharacterNotFoundException::build();
             return null;
         }
 
@@ -41,7 +39,6 @@ class ArrayCharacterRepository implements CharacterRepository
             count($this->characters) + 1
         );
 
-        //$this->characters[] = $character;
         $this->characters[$character->getId()] = $character;
 
         return $character;

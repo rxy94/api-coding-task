@@ -7,8 +7,9 @@ use App\Character\Domain\Exception\CharacterNotFoundException;
 
 class DeleteCharacterUseCase
 {
-    public function __construct(private CharacterRepository $repository)
-    {
+    public function __construct(
+        private CharacterRepository $repository
+    ) {
     }
 
     public function execute(int $id): void

@@ -2,7 +2,6 @@
 
 namespace App\Character\Application;
 
-use App\Character\Domain\Character;
 use App\Character\Domain\CharacterFactory;
 use App\Character\Domain\CharacterRepository;
 

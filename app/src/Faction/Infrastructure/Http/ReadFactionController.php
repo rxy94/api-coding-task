@@ -10,25 +10,49 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class ReadFactionController {
 
-    public function __construct(private ReadFactionUseCase $useCase)
+    private const SUCCESS_MESSAGE = 'Facciones obtenidas correctamente';
+    private const ERROR_MESSAGE = 'Error al obtener las facciones';
+
+    public function __construct(
+        private ReadFactionUseCase $readFactionUseCase
+    ) {
+    }
+
+    public static function getSuccessMessage(): string
     {
+        return self::SUCCESS_MESSAGE;
+    }
+
+    public static function getErrorMessage(): string
+    {
+        return self::ERROR_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response): Response
     {
-        $factions = $this->useCase->execute();
+        try {   
+            $factions = $this->readFactionUseCase->execute();
 
-        $response->getBody()->write(json_encode([
+            $response->getBody()->write(json_encode([
             'factions' => array_map(
                 function (Faction $faction) {
                     return FactionToArrayTransformer::transform($faction);
                 },
                 $factions
             ),
-            'message' => 'Facciones obtenidas correctamente'
-        ]));
+            'message' => self::SUCCESS_MESSAGE
+            ]));
 
-        return $response->withHeader('Content-Type', 'application/json');
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode([
+                'error' => self::ERROR_MESSAGE,
+                'message' => $e->getMessage()
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
     }
 
 }

@@ -10,8 +10,16 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class ReadFactionByIdController {
 
-    public function __construct(private ReadFactionByIdUseCase $readFactionByIdUseCase)
+    private const SUCCESS_MESSAGE = 'Facción encontrada correctamente';
+
+    public function __construct(
+        private ReadFactionByIdUseCase $readFactionByIdUseCase
+    ) {
+    }
+
+    public static function getSuccessMessage(): string
     {
+        return self::SUCCESS_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
@@ -23,7 +31,7 @@ class ReadFactionByIdController {
 
             $response->getBody()->write(json_encode([
                 'faction' => FactionToArrayTransformer::transform($faction),
-                'message' => 'Facción encontrada correctamente'
+                'message' => self::SUCCESS_MESSAGE
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(200);

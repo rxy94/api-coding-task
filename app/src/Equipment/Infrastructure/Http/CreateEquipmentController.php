@@ -11,9 +11,16 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class CreateEquipmentController
 {
+    private const SUCCESS_MESSAGE = 'Equipo creado correctamente';
+
     public function __construct(
         private CreateEquipmentUseCase $createEquipmentUseCase
     ) {
+    }
+
+    public static function getSuccessMessage(): string
+    {
+        return self::SUCCESS_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
@@ -43,7 +50,7 @@ class CreateEquipmentController
             # Devolvemos el id del equipamiento creado
             $response->getBody()->write(json_encode([
                 'equipment' => EquipmentToArrayTransformer::transform($useCaseResponse->getEquipment()),
-                'message' => 'El equipamiento se ha creado correctamente'
+                'message' => self::SUCCESS_MESSAGE
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(200);

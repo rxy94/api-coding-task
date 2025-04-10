@@ -71,14 +71,15 @@ class CachedMySQLEquipmentRepository implements EquipmentRepository
     public function delete(Equipment $equipment): bool
     {
        
-        $this->mySQLEquipmentRepository->delete($equipment);
-        
-        $this->redis->del($this->getKey($equipment->getId()));
-        $this->redis->del($this->getKey('all'));
+        $result = $this->mySQLEquipmentRepository->delete($equipment);
 
-        $this->logger->info('Equipo eliminado de la caché', ['id' => $equipment->getId()]);
+        if ($result) {
+            $this->redis->del($this->getKey($equipment->getId()));
+            $this->redis->del($this->getKey('all'));
+            $this->logger->info('Equipo eliminado de la caché', ['id' => $equipment->getId()]);
+        }
 
-        return true;
+        return $result;
 
     }
 }

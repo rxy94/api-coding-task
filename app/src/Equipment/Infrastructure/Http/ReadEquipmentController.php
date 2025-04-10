@@ -10,25 +10,48 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class ReadEquipmentController {
 
-    public function __construct(private ReadEquipmentUseCase $useCase)
+    private const SUCCESS_MESSAGE = 'Equipos obtenidos correctamente';
+    private const ERROR_MESSAGE = 'Error al obtener los equipos';
+
+    public function __construct(
+        private ReadEquipmentUseCase $readEquipmentUseCase
+    ) {
+    }
+
+    public static function getSuccessMessage(): string
     {
+        return self::SUCCESS_MESSAGE;
+    }
+
+    public static function getErrorMessage(): string
+    {
+        return self::ERROR_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response): Response
     {
-        $equipments = $this->useCase->execute();
+        try {
+            $equipments = $this->readEquipmentUseCase->execute();
 
-        $response->getBody()->write(json_encode([
-            'equipments' => array_map(
-                function (Equipment $equipment) {
-                    return EquipmentToArrayTransformer::transform($equipment);
-                },
-                $equipments
-            ),
-            'message' => 'Equipos obtenidos correctamente'
-        ]));
-            
-        return $response->withHeader('Content-Type', 'application/json');
-        
+            $response->getBody()->write(json_encode([
+                'equipments' => array_map(
+                    function (Equipment $equipment) {
+                        return EquipmentToArrayTransformer::transform($equipment);
+                    },
+                    $equipments
+                ),
+                'message' => self::SUCCESS_MESSAGE
+            ]));
+                
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode([
+                'error' => self::ERROR_MESSAGE,
+                'message' => $e->getMessage()
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
     }
 }

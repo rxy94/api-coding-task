@@ -3,7 +3,7 @@
 namespace App\Equipment\Application;
 
 use App\Equipment\Domain\EquipmentRepository;
-use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentNotFoundException;
+use App\Equipment\Domain\Exception\EquipmentNotFoundException;
 
 class DeleteEquipmentUseCase
 {

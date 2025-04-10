@@ -10,8 +10,22 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class ReadCharacterController {
 
-    public function __construct(private ReadCharacterUseCase $readCharacterUseCase)
+    private const SUCCESS_MESSAGE = 'Personajes obtenidos correctamente';
+    private const ERROR_MESSAGE = 'Error al obtener los personajes';    
+
+    public function __construct(
+        private ReadCharacterUseCase $readCharacterUseCase
+    ) {
+    }
+
+    public static function getSuccessMessage(): string
     {
+        return self::SUCCESS_MESSAGE;
+    }
+
+    public static function getErrorMessage(): string
+    {
+        return self::ERROR_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response): Response 
@@ -26,7 +40,7 @@ class ReadCharacterController {
                     },
                     $characters
                 ),
-                'message' => 'Personajes obtenidos correctamente'
+                'message' => self::SUCCESS_MESSAGE
             ]));
                 
             return $response->withHeader('Content-Type', 'application/json');
@@ -34,7 +48,7 @@ class ReadCharacterController {
         } catch (\Exception $e) {
             error_log("Error en el controlador: " . $e->getMessage());
             $response->getBody()->write(json_encode([
-                'error' => 'Error al obtener los personajes',
+                'error' => self::ERROR_MESSAGE,
                 'message' => $e->getMessage()
 
             ]));

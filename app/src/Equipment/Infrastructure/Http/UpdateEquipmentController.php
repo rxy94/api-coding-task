@@ -12,9 +12,22 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class UpdateEquipmentController
 {
+    private const SUCCESS_MESSAGE = 'Equipo actualizado correctamente';
+    private const ERROR_MESSAGE = 'Error al actualizar el equipo';
+
     public function __construct(
         private UpdateEquipmentUseCase $updateEquipmentUseCase
     ) {
+    }
+
+    public static function getSuccessMessage(): string
+    {
+        return self::SUCCESS_MESSAGE;
+    }
+
+    public static function getErrorMessage(): string
+    {
+        return self::ERROR_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
@@ -25,14 +38,16 @@ class UpdateEquipmentController
 
         foreach ($requiredFields as $field){
             if (!isset($data[$field])){
-                $response->getBody()->write(json_encode(['error' => "Missing required field: {$field}"]));
+                $response->getBody()->write(json_encode(['error' => "Campo requerido: {$field}"]));
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }
         }
 
         try {
+            $id = (int) $args['id'];
+
             $useCaseRequest = new UpdateEquipmentUseCaseRequest(
-                id: $args['id'],
+                id: $id,
                 name: $data['name'],
                 type: $data['type'],
                 madeBy: $data['made_by']
@@ -42,7 +57,7 @@ class UpdateEquipmentController
             
             $response->getBody()->write(json_encode([
                 'equipment' => EquipmentToArrayTransformer::transform($useCaseResponse->getEquipment()),
-                'message' => 'El equipamiento se ha actualizado correctamente'
+                'message' => self::SUCCESS_MESSAGE
             ]));
             
             return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
@@ -60,6 +75,14 @@ class UpdateEquipmentController
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+
+        } catch (\Exception $e){
+            $response->getBody()->write(json_encode([
+                'error' => self::ERROR_MESSAGE,
+                'message' => $e->getMessage()
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
     }
     

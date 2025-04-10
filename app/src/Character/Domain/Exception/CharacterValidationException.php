@@ -30,59 +30,59 @@ class CharacterValidationException extends \DomainException
         parent::__construct($message);
     }
 
-    public static function withNameRequired(): static
+    public static function withNameRequired(): self
     {
-        return new static(self::NAME_REQUIRED);
+        return new self(self::NAME_REQUIRED);
     }
 
-    public static function withNameLengthError(): static
+    public static function withNameLengthError(): self
     {
-        return new static(self::NAME_LENGTH_ERROR);
+        return new self(self::NAME_LENGTH_ERROR);
     }
 
-    public static function withBirthDateRequired(): static
+    public static function withBirthDateRequired(): self
     {
-        return new static(self::BIRTH_DATE_REQUIRED);
+        return new self(self::BIRTH_DATE_REQUIRED);
     }
 
-    public static function withBirthDateFormatError(): static
+    public static function withBirthDateFormatError(): self
     {
-        return new static(self::BIRTH_DATE_FORMAT_ERROR);
+        return new self(self::BIRTH_DATE_FORMAT_ERROR);
     }
 
-    public static function withKingdomRequired(): static
+    public static function withKingdomRequired(): self
     {
-        return new static(self::KINGDOM_REQUIRED);
+        return new self(self::KINGDOM_REQUIRED);
     }
 
-    public static function withKingdomLengthError(): static
+    public static function withKingdomLengthError(): self
     {
-        return new static(self::KINGDOM_LENGTH_ERROR);
+        return new self(self::KINGDOM_LENGTH_ERROR);
     }
 
-    public static function withEquipmentIdRequired(): static
+    public static function withEquipmentIdRequired(): self
     {
-        return new static(self::EQUIPMENT_ID_REQUIRED);
+        return new self(self::EQUIPMENT_ID_REQUIRED);
     }
 
-    public static function withEquipmentIdNonPositive(): static
+    public static function withEquipmentIdNonPositive(): self
     {
-        return new static(self::EQUIPMENT_ID_NON_POSITIVE);
+        return new self(self::EQUIPMENT_ID_NON_POSITIVE);
     }
 
-    public static function withFactionIdRequired(): static
+    public static function withFactionIdRequired(): self
     {
-        return new static(self::FACTION_ID_REQUIRED);
+        return new self(self::FACTION_ID_REQUIRED);
     }
 
-    public static function withFactionIdNonPositive(): static
+    public static function withFactionIdNonPositive(): self
     {
-        return new static(self::FACTION_ID_NON_POSITIVE);
+        return new self(self::FACTION_ID_NON_POSITIVE);
     }
 
-    public static function withIdNonPositive(): static
+    public static function withIdNonPositive(): self
     {
-        return new static(self::ID_NON_POSITIVE);
+        return new self(self::ID_NON_POSITIVE);
     }
 
 } 

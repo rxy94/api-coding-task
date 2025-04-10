@@ -4,7 +4,7 @@ namespace App\Character\Application;
 
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
-use App\Character\Infrastructure\Persistence\Pdo\Exception\CharacterNotFoundException;
+use App\Character\Domain\Exception\CharacterNotFoundException;
 
 class UpdateCharacterUseCase
 {

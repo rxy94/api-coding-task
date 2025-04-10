@@ -11,9 +11,16 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class CreateCharacterController
 {
+    private const SUCCESS_MESSAGE = 'Personaje creado correctamente';
+
     public function __construct(
         private CreateCharacterUseCase $createCharacterUseCase
     ) {
+    }
+
+    public static function getSuccessMessage(): string
+    {
+        return self::SUCCESS_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
@@ -45,7 +52,7 @@ class CreateCharacterController
             # Devolvemos el personaje creado
             $response->getBody()->write(json_encode([
                 'character' => CharacterToArrayTransformer::transform($useCaseResponse->getCharacter()),
-                'message' => 'El personaje se ha creado correctamente'
+                'message' => self::SUCCESS_MESSAGE
             ]));
             
             return $response->withHeader('Content-Type', 'application/json')->withStatus(200);

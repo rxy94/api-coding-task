@@ -11,9 +11,16 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class CreateFactionController
 {
+    private const SUCCESS_MESSAGE = 'Facción creada correctamente';
+
     public function __construct(
         private CreateFactionUseCase $factionUseCase
     ) {
+    }
+
+    public static function getSuccessMessage(): string
+    {
+        return self::SUCCESS_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
@@ -42,7 +49,7 @@ class CreateFactionController
             # Devolvemos una respuesta de éxito
             $response->getBody()->write(json_encode([
                 'faction' => FactionToArrayTransformer::transform($useCaseResponse->getFaction()),
-                'message' => 'La facción se ha creado correctamente'
+                'message' => self::SUCCESS_MESSAGE
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
