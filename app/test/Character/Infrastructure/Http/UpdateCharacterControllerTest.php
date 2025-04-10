@@ -4,9 +4,9 @@ namespace App\Test\Character\Infrastructure\Http;
 
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
-use App\Character\Infrastructure\Persistence\Pdo\Exception\CharacterNotFoundException;
+use App\Character\Infrastructure\Http\UpdateCharacterController;
+use App\Character\Domain\Exception\CharacterNotFoundException;
 use PDO;
-
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
@@ -29,41 +29,49 @@ class UpdateCharacterControllerTest extends TestCase
     {
         parent::setUp();
         $this->pdo = $this->createPdoConnection();
-        
-        // Crear equipos de prueba
-        $this->pdo->exec("INSERT INTO equipments (name, type, made_by) VALUES ('Sword of Testing', 'Weapon', 'Test Blacksmith')");
-        $this->insertedEquipmentIds[] = $this->pdo->lastInsertId();
 
-        $this->pdo->exec("INSERT INTO equipments (name, type, made_by) VALUES ('Sword of Testing 2', 'Weapon', 'Test Blacksmith 2')");
-        $this->insertedEquipmentIds[] = $this->pdo->lastInsertId();
+        $this->insertTestEquipment('Sword of Testing', 'Weapon', 'Test Blacksmith');
+        $this->insertTestEquipment('Sword of Testing 2', 'Weapon', 'Test Blacksmith 2');
 
-        // Crear facciones de prueba
-        $this->pdo->exec("INSERT INTO factions (faction_name, description) VALUES ('Test Faction', 'A test faction for testing')");
-        $this->insertedFactionIds[] = $this->pdo->lastInsertId();
+        $this->insertTestFaction('Test Faction', 'A test faction for testing');
+        $this->insertTestFaction('Test Faction 2', 'A test faction for testing 2');
+    }
 
-        $this->pdo->exec("INSERT INTO factions (faction_name, description) VALUES ('Test Faction 2', 'A test faction for testing 2')");
-        $this->insertedFactionIds[] = $this->pdo->lastInsertId();
+    private function insertTestEquipment(string $name, string $type, string $madeBy): void
+    {
+        $stmt = $this->pdo->prepare("INSERT INTO equipments (name, type, made_by) VALUES (:name, :type, :made_by)");
+        $stmt->execute(['name' => $name, 'type' => $type, 'made_by' => $madeBy]);
+        $id = $this->pdo->lastInsertId();
+        if (!$id) {
+            throw new \RuntimeException("Error al insertar el equipo: $name");
+        }
+        $this->insertedEquipmentIds[] = $id;
+    }
+
+    private function insertTestFaction(string $name, string $description): void
+    {
+        $stmt = $this->pdo->prepare("INSERT INTO factions (faction_name, description) VALUES (:name, :description)");
+        $stmt->execute(['name' => $name, 'description' => $description]);
+        $id = $this->pdo->lastInsertId();
+        if (!$id) {
+            throw new \RuntimeException("Error al insertar la facción: $name");
+        }
+        $this->insertedFactionIds[] = $id;
     }
 
     protected function tearDown(): void
     {
         try {
-            // Eliminar personajes
-            if (!empty($this->insertedCharacterIds)) {
-                $ids = implode(',', $this->insertedCharacterIds);
-                $this->pdo->exec("DELETE FROM characters WHERE id IN ($ids)");
-            }
-
-            // Eliminar equipos
-            if (!empty($this->insertedEquipmentIds)) {
-                $ids = implode(',', $this->insertedEquipmentIds);
-                $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
-            }
-
-            // Eliminar facciones
-            if (!empty($this->insertedFactionIds)) {
-                $ids = implode(',', $this->insertedFactionIds);
-                $this->pdo->exec("DELETE FROM factions WHERE id IN ($ids)");
+            foreach ([
+                'characters' => $this->insertedCharacterIds,
+                'equipments' => $this->insertedEquipmentIds,
+                'factions'   => $this->insertedFactionIds,
+            ] as $table => $ids) {
+                $filteredIds = array_filter($ids);
+                if (!empty($filteredIds)) {
+                    $sql = "DELETE FROM $table WHERE id IN (" . implode(',', $filteredIds) . ")";
+                    $this->pdo->exec($sql);
+                }
             }
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
@@ -86,27 +94,24 @@ class UpdateCharacterControllerTest extends TestCase
      * @group happy-path
      * @group acceptance
      * @group character
+     * @group character-http
      * @group update-character
      */
     public function givenARequestToTheControllerWithValidDataWhenUpdateCharacterThenReturnTheUpdatedCharacterAsJson()
     {
         $app = $this->getAppInstance();
-
         $repository = $app->getContainer()->get(CharacterRepository::class);
 
-        // Crear un personaje inicial
         $character = new Character(
-            'John Doe',
-            '1990-01-01',
-            'Kingdom of Spain',
-            $this->insertedEquipmentIds[0],
+            'John Doe', 
+            '1990-01-01', 
+            'Kingdom of Spain', 
+            $this->insertedEquipmentIds[0], 
             $this->insertedFactionIds[0]
         );
-
         $savedCharacter = $repository->save($character);
         $this->insertedCharacterIds[] = $savedCharacter->getId();
 
-        // Datos para actualizar
         $updateData = [
             'name' => 'John Updated',
             'birth_date' => '1995-05-05',
@@ -122,9 +127,8 @@ class UpdateCharacterControllerTest extends TestCase
         $responseData = json_decode($payload, true);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('El personaje se ha actualizado correctamente', $responseData['message']);
+        $this->assertEquals(UpdateCharacterController::getSuccessMessage(), $responseData['message']);
 
-        // Verificar que el personaje se actualizó correctamente en la base de datos
         $updatedCharacter = $repository->findById($savedCharacter->getId());
 
         $this->assertEquals($updateData['name'], $updatedCharacter->getName());
@@ -139,6 +143,7 @@ class UpdateCharacterControllerTest extends TestCase
      * @group unhappy-path
      * @group acceptance
      * @group character
+     * @group character-http
      * @group update-character
      */
     public function givenARequestToTheControllerWithInvalidDataWhenUpdateCharacterThenReturnErrorAsJson()
@@ -175,7 +180,7 @@ class UpdateCharacterControllerTest extends TestCase
         $responseData = json_decode($payload, true);
 
         $this->assertEquals(400, $response->getStatusCode());
-        $this->assertEquals('El nombre es requerido', $responseData['error']);
+        $this->assertEquals('Campo requerido: name', $responseData['error']);
     }
 
     /**
@@ -183,6 +188,7 @@ class UpdateCharacterControllerTest extends TestCase
      * @group unhappy-path
      * @group acceptance
      * @group character
+     * @group character-http
      * @group update-character
      */
     public function givenARequestToTheControllerWithNonExistentIdWhenUpdateCharacterThenReturnErrorAsJson()
@@ -235,16 +241,16 @@ class UpdateCharacterControllerTest extends TestCase
         array $headers = ['HTTP_ACCEPT' => 'application/json', 'Content-Type' => 'application/json']
     ): Request {
         $uri = new Uri('', '', 80, $path);
-        $handle = fopen('php://temp', 'w+');
-        $stream = (new StreamFactory())->createStreamFromResource($handle);
-        fwrite($handle, json_encode($data));
-        rewind($handle);
-
+        $json = json_encode($data);
+        $stream = (new StreamFactory())->createStream($json);
+    
         $h = new Headers();
         foreach ($headers as $name => $value) {
             $h->addHeader($name, $value);
         }
-
-        return new SlimRequest($method, $uri, $h, [], [], $stream);
-    }
+    
+        return (new SlimRequest($method, $uri, $h, [], [], $stream))
+            ->withParsedBody($data);
+    }    
+    
 }

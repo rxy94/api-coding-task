@@ -10,8 +10,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class ReadCharacterController {
 
-    private const SUCCESS_MESSAGE = 'Personajes obtenidos correctamente';
-    private const ERROR_MESSAGE = 'Error al obtener los personajes';    
+    private const SUCCESS_MESSAGE = 'Personajes obtenidos correctamente'; 
 
     public function __construct(
         private ReadCharacterUseCase $readCharacterUseCase
@@ -23,34 +22,25 @@ class ReadCharacterController {
         return self::SUCCESS_MESSAGE;
     }
 
-    public static function getErrorMessage(): string
-    {
-        return self::ERROR_MESSAGE;
-    }
-
     public function __invoke(Request $request, Response $response): Response 
     {
         try {
             $characters = $this->readCharacterUseCase->execute();
-                
+
             $response->getBody()->write(json_encode([
                 'characters' => array_map(
-                    function (Character $character) {
-                        return CharacterToArrayTransformer::transform($character);
-                    },
+                    fn(Character $character) => CharacterToArrayTransformer::transform($character),
                     $characters
                 ),
                 'message' => self::SUCCESS_MESSAGE
             ]));
-                
-            return $response->withHeader('Content-Type', 'application/json');
 
+            return $response->withHeader('Content-Type', 'application/json');
+            
         } catch (\Exception $e) {
             error_log("Error en el controlador: " . $e->getMessage());
             $response->getBody()->write(json_encode([
-                'error' => self::ERROR_MESSAGE,
-                'message' => $e->getMessage()
-
+                'message' => $e->getMessage() 
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);

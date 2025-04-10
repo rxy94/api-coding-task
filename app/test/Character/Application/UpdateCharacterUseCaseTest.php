@@ -6,9 +6,9 @@ use App\Character\Application\UpdateCharacterUseCase;
 use App\Character\Application\UpdateCharacterUseCaseRequest;
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
+use App\Character\Domain\Exception\CharacterNotFoundException;
 use App\Character\Domain\Exception\CharacterValidationException;
 use App\Character\Infrastructure\InMemory\ArrayCharacterRepository;
-use App\Character\Infrastructure\Persistence\Pdo\Exception\CharacterNotFoundException;
 use PHPUnit\Framework\TestCase;
 
 class UpdateCharacterUseCaseTest extends TestCase
@@ -17,6 +17,7 @@ class UpdateCharacterUseCaseTest extends TestCase
      * @test
      * @group unit
      * @group character
+     * @group character-unit
      * @group update-character
      * @group happy-path
      */
@@ -72,6 +73,7 @@ class UpdateCharacterUseCaseTest extends TestCase
      * @test
      * @group unit
      * @group character
+     * @group character-unit
      * @group update-character
      * @group unhappy-path
      */
@@ -100,6 +102,7 @@ class UpdateCharacterUseCaseTest extends TestCase
      * @test
      * @group unit
      * @group character
+     * @group character-unit
      * @group update-character
      * @group validation
      */

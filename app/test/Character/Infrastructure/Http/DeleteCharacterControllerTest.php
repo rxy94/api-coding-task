@@ -5,6 +5,7 @@ namespace App\Test\Character\Infrastructure\Http;
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterNotFoundException;
+use App\Character\Infrastructure\Http\DeleteCharacterByIdController;
 use PDO;
 
 use DI\ContainerBuilder;
@@ -80,6 +81,7 @@ class DeleteCharacterControllerTest extends TestCase
      * @group happy-path
      * @group acceptance
      * @group character
+     * @group character-http
      * @group delete-character
      */
     public function givenARequestToTheControllerWithValidIdWhenDeleteCharacterThenReturnSuccessMessage()
@@ -111,7 +113,7 @@ class DeleteCharacterControllerTest extends TestCase
         // Verificar la respuesta
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertArrayHasKey('message', $responseData);
-        $this->assertEquals('Personaje eliminado correctamente', $responseData['message']);
+        $this->assertEquals(DeleteCharacterByIdController::getSuccessMessage(), $responseData['message']);
 
         // Verificar que el personaje se eliminó correctamente de la base de datos
         $this->expectException(CharacterNotFoundException::class);
@@ -123,6 +125,7 @@ class DeleteCharacterControllerTest extends TestCase
      * @group unhappy-path
      * @group acceptance
      * @group character
+     * @group character-http
      * @group delete-character
      */
     public function givenARequestToTheControllerWithNonExistentIdWhenDeleteCharacterThenReturnErrorAsJson()
@@ -142,7 +145,7 @@ class DeleteCharacterControllerTest extends TestCase
         // Verificar la respuesta
         $this->assertEquals(404, $response->getStatusCode());
         $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals(CharacterNotFoundException::build()->getMessage(), $responseData['error']);
+        $this->assertEquals(DeleteCharacterByIdController::getErrorMessage(), $responseData['error']);
     }
 
     private function getAppInstance(): App

@@ -6,6 +6,7 @@ use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\CharacterToArrayTransformer;
 use App\Character\Domain\Exception\CharacterNotFoundException;
+use App\Character\Infrastructure\Http\ReadCharacterByIdController;
 use PDO;
 
 use DI\ContainerBuilder;
@@ -84,6 +85,7 @@ class ReadCharacterControllerTest extends TestCase
      * @group happy-path
      * @group acceptance
      * @group character
+     * @group character-http
      * @group read-character
      */
     public function givenARequestToTheControllerWhenReadCharacterThenReturnTheCharacterAsJson()
@@ -114,7 +116,7 @@ class ReadCharacterControllerTest extends TestCase
             CharacterToArrayTransformer::transform($savedCharacter),
             $responseData['character']
         );
-        $this->assertEquals('Personaje obtenido correctamente', $responseData['message']);
+        $this->assertEquals(ReadCharacterByIdController::getSuccessMessage(), $responseData['message']);
     }
 
     /**
@@ -122,6 +124,7 @@ class ReadCharacterControllerTest extends TestCase
      * @group unhappy-path
      * @group acceptance
      * @group character
+     * @group character-http
      * @group read-character
      */
     public function givenARequestToTheControllerWhenCharacterNotFoundThenReturnErrorAsJson()

@@ -27,6 +27,7 @@ class ReadAllCharactersUseCaseTest extends TestCase
      * @group happy-path
      * @group unit
      * @group character
+     * @group character-unit
      * @group read-all-characters
      */
     public function givenARepositoryWithMultipleCharactersWhenReadAllCharactersThenReturnAllCharacters()
@@ -65,6 +66,7 @@ class ReadAllCharactersUseCaseTest extends TestCase
      * @group unhappy-path
      * @group unit
      * @group character
+     * @group character-unit
      * @group read-all-characters
      */
     public function givenARepositoryWithNoCharactersWhenReadAllCharactersThenReturnEmptyArray()

@@ -18,6 +18,7 @@ class DeleteCharacterUseCaseTest extends TestCase
      * @test
      * @group unit
      * @group character
+     * @group character-unit
      * @group delete-character
      * @group happy-path
      */
@@ -57,6 +58,7 @@ class DeleteCharacterUseCaseTest extends TestCase
      * @test
      * @group unit
      * @group character
+     * @group character-unit
      * @group delete-character
      * @group happy-path
      */
@@ -95,6 +97,7 @@ class DeleteCharacterUseCaseTest extends TestCase
      * @test
      * @group unit
      * @group character
+     * @group character-unit
      * @group delete-character
      * @group unhappy-path
      */

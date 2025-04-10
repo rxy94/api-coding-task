@@ -57,8 +57,10 @@ class MySQLCharacterRepositoryTest extends TestCase
                 $ids = implode(',', $this->insertedFactionIds);
                 $this->pdo->exec("DELETE FROM factions WHERE id IN ($ids)");
             }
+
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+
         } finally {
             $this->insertedCharacterIds = [];
             $this->insertedEquipmentIds = [];
@@ -78,7 +80,8 @@ class MySQLCharacterRepositoryTest extends TestCase
      * @group happy-path
      * @group integration
      * @group character
-     * @group repository
+     * @group repository        
+     * @group character-repository
      */
     public function givenARepositoryWithOneCharacterIdWhenReadCharacterThenReturnTheCharacter()
     {

@@ -4,8 +4,8 @@ namespace App\Test\Character\Infrastructure\Http;
 
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterValidationException;
+use App\Character\Infrastructure\Http\CreateCharacterController;
 use PDO;
-
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
@@ -29,37 +29,59 @@ class CreateCharacterControllerTest extends TestCase
         parent::setUp();
         $this->pdo = $this->createPdoConnection();
 
-        // Crear equipos de prueba
-        $this->pdo->exec("INSERT INTO equipments (name, type, made_by) VALUES ('Sword of Testing', 'Weapon', 'Test Blacksmith')");
-        $this->insertedEquipmentIds[] = $this->pdo->lastInsertId();
+        // Equipos de prueba
+        $this->insertTestEquipment('Sword of Testing', 'Weapon', 'Test Blacksmith');
+        $this->insertTestEquipment('Sword of Testing 2', 'Weapon', 'Test Blacksmith 2');
 
-        $this->pdo->exec("INSERT INTO equipments (name, type, made_by) VALUES ('Sword of Testing 2', 'Weapon', 'Test Blacksmith 2')");
-        $this->insertedEquipmentIds[] = $this->pdo->lastInsertId();
+        // Facciones de prueba
+        $this->insertTestFaction('Test Faction', 'A test faction for testing');
+        $this->insertTestFaction('Test Faction 2', 'A test faction for testing 2');
+    }
 
-        // Crear facciones de prueba
-        $this->pdo->exec("INSERT INTO factions (faction_name, description) VALUES ('Test Faction', 'A test faction for testing')");
-        $this->insertedFactionIds[] = $this->pdo->lastInsertId();
+    private function insertTestEquipment(string $name, string $type, string $madeBy): void
+    {
+        $sql = "INSERT INTO equipments (name, type, made_by) VALUES (:name, :type, :made_by)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'name' => $name,
+            'type' => $type,
+            'made_by' => $madeBy,
+        ]);
+        $id = $this->pdo->lastInsertId();
+        if (!$id) {
+            throw new \RuntimeException("Error al insertar el equipo: $name");
+        }
+        $this->insertedEquipmentIds[] = $id;
+    }
 
-        $this->pdo->exec("INSERT INTO factions (faction_name, description) VALUES ('Test Faction 2', 'A test faction for testing 2')");
-        $this->insertedFactionIds[] = $this->pdo->lastInsertId();
+    private function insertTestFaction(string $name, string $description): void
+    {
+        $sql = "INSERT INTO factions (faction_name, description) VALUES (:name, :description)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'name' => $name,
+            'description' => $description,
+        ]);
+        $id = $this->pdo->lastInsertId();
+        if (!$id) {
+            throw new \RuntimeException("Error al insertar la facción: $name");
+        }
+        $this->insertedFactionIds[] = $id;
     }
 
     protected function tearDown(): void
     {
         try {
-            if (!empty($this->insertedCharacterIds)) {
-                $ids = implode(',', $this->insertedCharacterIds);
-                $this->pdo->exec("DELETE FROM characters WHERE id IN ($ids)");
-            }
-
-            if (!empty($this->insertedEquipmentIds)) {
-                $ids = implode(',', $this->insertedEquipmentIds);
-                $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
-            }
-
-            if (!empty($this->insertedFactionIds)) {
-                $ids = implode(',', $this->insertedFactionIds);
-                $this->pdo->exec("DELETE FROM factions WHERE id IN ($ids)");
+            foreach ([
+                'characters' => $this->insertedCharacterIds,
+                'equipments' => $this->insertedEquipmentIds,
+                'factions'   => $this->insertedFactionIds,
+            ] as $table => $ids) {
+                $filteredIds = array_filter($ids);
+                if (!empty($filteredIds)) {
+                    $sql = "DELETE FROM $table WHERE id IN (" . implode(',', $filteredIds) . ")";
+                    $this->pdo->exec($sql);
+                }
             }
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
@@ -81,8 +103,9 @@ class CreateCharacterControllerTest extends TestCase
      * @test
      * @group happy-path
      * @group acceptance
-     * @group create-character
      * @group character 
+     * @group character-http
+     * @group create-character
      */
     public function givenARequestToTheControllerWithValidDataWhenCreateCharacterThenReturnTheCharacterAsJson()
     {
@@ -112,7 +135,7 @@ class CreateCharacterControllerTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertArrayHasKey('character', $responseData);
         $this->assertArrayHasKey('message', $responseData);
-        $this->assertEquals('El personaje se ha creado correctamente', $responseData['message']);
+        $this->assertEquals(CreateCharacterController::getSuccessMessage(), $responseData['message']);
 
         $repository = $app->getContainer()->get(CharacterRepository::class);
         $createdCharacter = $repository->findById($responseData['character']['id']);
@@ -129,8 +152,9 @@ class CreateCharacterControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
-     * @group create-character
      * @group character 
+     * @group character-http
+     * @group create-character
      */
     public function givenARequestToTheControllerWithInvalidDataWhenCreateCharacterThenReturnErrorAsJson()
     {
@@ -159,8 +183,9 @@ class CreateCharacterControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
+     * @group character     
+     * @group character-http
      * @group create-character
-     * @group character 
      */
     public function givenARequestToTheControllerWithMissingFieldsWhenCreateCharacterThenReturnErrorAsJson()
     {
@@ -189,8 +214,9 @@ class CreateCharacterControllerTest extends TestCase
      * @test
      * @group unhappy-path
      * @group acceptance
+     * @group character     
+     * @group character-http
      * @group create-character
-     * @group character 
      */
     public function givenARequestToTheControllerWithValidationExceptionWhenCreateCharacterThenReturnErrorAsJson()
     {

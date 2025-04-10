@@ -48,7 +48,6 @@ class DeleteCharacterByIdController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
-                'error' => self::ERROR_MESSAGE,
                 'message' => $e->getMessage()
             ]));
 

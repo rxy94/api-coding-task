@@ -19,6 +19,7 @@ class ReadCharacterUseCaseTest extends TestCase
      * @group happy-path
      * @group unit
      * @group character
+     * @group character-unit
      * @group read-character
      */
     public function givenARepositoryWithOneCharacterIdWhenReadCharacterThenReturnTheCharacter()
@@ -62,6 +63,7 @@ class ReadCharacterUseCaseTest extends TestCase
      * @group unhappy-path
      * @group unit
      * @group character
+     * @group character-unit
      * @group read-character
      */
     public function givenARepositoryWithNonExistingCharacterIdWhenReadCharacterThenExceptionShouldBeRaised()

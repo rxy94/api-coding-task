@@ -34,10 +34,9 @@ class UpdateCharacterController
     {
         $data = $request->getParsedBody();
 
-        $requiredFields = ['name', 'faction_id', 'equipment_id'];
-
+        $requiredFields = ['name', 'birth_date', 'kingdom', 'faction_id', 'equipment_id'];
         foreach ($requiredFields as $field) {
-            if (!isset($data[$field])) {
+            if (!isset($data[$field]) || empty($data[$field])) {
                 $response->getBody()->write(json_encode(['error' => "Campo requerido: {$field}"]));
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }
@@ -51,8 +50,8 @@ class UpdateCharacterController
                 name: $data['name'],
                 birthDate: $data['birth_date'],
                 kingdom: $data['kingdom'],
-                equipmentId: $data['equipment_id'],
-                factionId: $data['faction_id']
+                equipmentId: (int) $data['equipment_id'],
+                factionId: (int) $data['faction_id']
             );
 
             $character = $this->updateCharacterUseCase->execute($useCaseRequest);
