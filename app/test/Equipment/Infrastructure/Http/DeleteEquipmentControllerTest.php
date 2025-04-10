@@ -4,76 +4,78 @@ namespace App\Test\Equipment\Infrastructure\Http;
 
 use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
-use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentNotFoundException;
+use App\Equipment\Domain\Exception\EquipmentNotFoundException;
+use PDO;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
 use Slim\Factory\AppFactory;
-use Slim\Psr7\Factory\StreamFactory;
-use Slim\Psr7\Headers;
 use Slim\Psr7\Uri;
+use Slim\Psr7\Headers;
+use Slim\Psr7\Factory\StreamFactory;
 use Slim\Psr7\Request as SlimRequest;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class DeleteEquipmentControllerTest extends TestCase
 {
-    private App $app;
-    private EquipmentRepository $repository;
+    private PDO $pdo;
     private array $insertedEquipmentIds = [];
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->app = $this->getAppInstance();
-        $this->repository = $this->app->getContainer()->get(EquipmentRepository::class);
+        $this->pdo = $this->createPdoConnection();
+        $this->insertedEquipmentIds[] = $this->pdo->lastInsertId();
     }
 
     protected function tearDown(): void
     {
         parent::tearDown();
         try {
-            // Eliminar solo los registros que hemos insertado en este test
             if (!empty($this->insertedEquipmentIds)) {
-                $pdo = $this->app->getContainer()->get(\PDO::class);
                 $ids = implode(',', $this->insertedEquipmentIds);
-                $pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
+                $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
             }
         } catch (\Exception $e) {
-            // Si hay algún error al limpiar, lo registramos pero no lo propagamos
-            // para no enmascarar el error original del test
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
         } finally {
-            // Limpiar los arrays para el siguiente test
             $this->insertedEquipmentIds = [];
         }
     }
 
+    private function createPdoConnection(): PDO
+    {
+        return new PDO('mysql:host=db;dbname=test', 'root', 'root');
+    }
 
     /**
      * @test
      * @group happy-path
      * @group acceptance
      * @group equipment
-     * @group controller
+     * @group delete-equipment
      */
     public function givenARequestToTheControllerWithValidIdWhenDeleteEquipmentThenReturnSuccessMessage()
     {
+        $app = $this->getAppInstance();
+        $repository = $app->getContainer()->get(EquipmentRepository::class);
+
         // Crear un equipamiento para eliminarlo
         $equipment = new Equipment(
             'Sword of the King',
             'A sword with a hilt of gold and a blade of steel',
             'John Doe'
         );
-        $savedEquipment = $this->repository->save($equipment);
-        $this->insertedEquipmentIds[] = $savedEquipment->getId();
-        $equipmentId = $savedEquipment->getId();    
+
+        $savedEquipment = $repository->save($equipment);
+        $this->insertedEquipmentIds[] = $savedEquipment->getId();  
 
         // Crear una solicitud para eliminar el equipamiento
-        $request = $this->createJsonRequest('DELETE', '/equipments/' . $equipmentId, []);
+        $request = $this->createJsonRequest('DELETE', '/equipments/' . $savedEquipment->getId(), []);
         
         // Procesar la solicitud
-        $response = $this->app->handle($request);
+        $response = $app->handle($request);
 
         // Obtener y decodificar la respuesta
         $payload = (string) $response->getBody();
@@ -89,15 +91,17 @@ class DeleteEquipmentControllerTest extends TestCase
      * @group unhappy-path
      * @group acceptance
      * @group equipment
-     * @group controller
+     * @group delete-equipment
      */
     public function givenARequestToTheControllerWithNonExistentIdWhenDeleteEquipmentThenReturnErrorAsJson() 
     {
+        $app = $this->getAppInstance();
+
         // Crear una solicitud con un ID que no existe
         $request = $this->createJsonRequest('DELETE', '/equipments/999', []);
         
         // Procesar la solicitud
-        $response = $this->app->handle($request);
+        $response = $app->handle($request);
 
         // Obtener y decodificar la respuesta
         $payload = (string) $response->getBody();
@@ -105,7 +109,7 @@ class DeleteEquipmentControllerTest extends TestCase
         
         // Verificar la respuesta
         $this->assertEquals(404, $response->getStatusCode());
-        $this->assertEquals(EquipmentNotFoundException::MESSAGE, $responseData['error']);
+        $this->assertEquals(EquipmentNotFoundException::build()->getMessage(), $responseData['error']);
     }
 
     private function getAppInstance(): App  

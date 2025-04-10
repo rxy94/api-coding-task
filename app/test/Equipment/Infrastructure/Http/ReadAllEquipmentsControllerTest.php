@@ -5,10 +5,9 @@ namespace App\Test\Equipment\Infrastructure\Http;
 use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\EquipmentToArrayTransformer;
-use App\Equipment\Domain\Exception\EquipmentNotFoundException;
+use PDO;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
-use PDO;
 use PHPUnit\Framework\TestCase;
 use Slim\App;
 use Slim\Factory\AppFactory;
@@ -18,8 +17,7 @@ use Slim\Psr7\Factory\StreamFactory;
 use Slim\Psr7\Request as SlimRequest;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-
-class ReadEquipmentControllerTest extends TestCase
+class ReadAllEquipmentsControllerTest extends TestCase
 {
     private PDO $pdo;
     private array $insertedEquipmentIds = [];
@@ -37,10 +35,8 @@ class ReadEquipmentControllerTest extends TestCase
                 $ids = implode(',', $this->insertedEquipmentIds);
                 $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
             }
-
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
-
         } finally {
             $this->insertedEquipmentIds = [];
         }
@@ -52,41 +48,58 @@ class ReadEquipmentControllerTest extends TestCase
     {
         return new PDO('mysql:host=db;dbname=test', 'root', 'root');
     }
-
+    
     /**
      * @test
-     * @group happy-path
-     * @group integration
+     * @group acceptance
      * @group equipment
-     * @group read-equipment
+     * @group read-all-equipments
      */
-    public function givenARequestToTheControllerWhenReadEquipmentThenReturnTheEquipmentAsJson()
+    public function givenARequestToTheControllerWhenReadAllEquipmentsThenReturnAllEquipmentsAsJson()
     {
         $app = $this->getAppInstance();
         $repository = $app->getContainer()->get(EquipmentRepository::class);
 
-        $expectedEquipment = new Equipment(
-            name: 'Sword of the King',
-            type: 'A sword with a hilt of gold and a blade of steel',
-            made_by: 'John Doe',
-        );
-        
-        $savedEquipment = $repository->save($expectedEquipment);
-        $this->insertedEquipmentIds[] = $savedEquipment->getId();
+        $equipments = [
+            new Equipment(
+                'Sword',
+                'Weapon',
+                'John Doe'
+            ),
+            new Equipment(
+                'Shield',
+                'Armor',
+                'Jane Smith'
+            ),
+            new Equipment(
+                'Bow',
+                'Weapon',
+                'Jane Smith'
+            ),
+        ];
 
-        $request = $this->createRequest('GET', '/equipments/' . $savedEquipment->getId());
+        $savedEquipments = [];
+        foreach ($equipments as $equipment) {
+            $savedEquipment = $repository->save($equipment);
+            $savedEquipments[] = $savedEquipment;
+            $this->insertedEquipmentIds[] = $savedEquipment->getId();
+        }
+
+        $request = $this->createRequest('GET', '/equipments');
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
-        $responseData = json_decode($payload, true);
+        $serializedPayload = json_encode([
+            'equipments' => array_map(
+                function (Equipment $equipment) {
+                    return EquipmentToArrayTransformer::transform($equipment);
+                },
+                $savedEquipments
+            ),
+            'message' => 'Equipos obtenidos correctamente'
+        ]);
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertArrayHasKey('equipment', $responseData);
-        $this->assertEquals(
-            EquipmentToArrayTransformer::transform($savedEquipment),
-            $responseData['equipment']
-        );
-        $this->assertEquals('Equipamiento encontrado correctamente', $responseData['message']);
+        $this->assertEquals($serializedPayload, $payload);
     }
 
     /**
@@ -94,28 +107,27 @@ class ReadEquipmentControllerTest extends TestCase
      * @group unhappy-path
      * @group acceptance
      * @group equipment
-     * @group read-equipment
-     */
-    public function givenARequestToTheControllerWhenEquipmentNotFoundThenReturnErrorAsJson()
+     * @group read-all-equipments
+    */
+    public function givenARequestToTheControllerWhenNoEquipmentsExistThenReturnEmptyArray()
     {
         $app = $this->getAppInstance();
 
-        $nonExistentId = 999999;
-        $request = $this->createRequest('GET', '/equipments/' . $nonExistentId);
+        $request = $this->createRequest('GET', '/equipments');
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
-        $responseData = json_decode($payload, true);
+        $serializedPayload = json_encode([
+            'equipments' => [],
+            'message' => 'Equipos obtenidos correctamente'
+        ]);
 
-        $this->assertEquals(404, $response->getStatusCode());   
-        $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals(EquipmentNotFoundException::build()->getMessage(), $responseData['error']);
+        $this->assertEquals($serializedPayload, $payload);
     }
     
-
     private function getAppInstance(): App
     {
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../');
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../', '.env.test');
         $dotenv->load();
 
         $containerBuilder = new ContainerBuilder();
@@ -152,5 +164,5 @@ class ReadEquipmentControllerTest extends TestCase
 
         return new SlimRequest($method, $uri, $h, $cookies, $serverParams, $stream);
     }
-    
+
 }

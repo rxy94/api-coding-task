@@ -4,7 +4,7 @@ namespace App\Equipment\Infrastructure\Http;
 
 use App\Equipment\Application\UpdateEquipmentUseCase;
 use App\Equipment\Domain\Exception\EquipmentValidationException;
-use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentNotFoundException;
+use App\Equipment\Domain\Exception\EquipmentNotFoundException;
 use App\Equipment\Application\UpdateEquipmentUseCaseRequest;
 use App\Equipment\Domain\EquipmentToArrayTransformer;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -53,6 +53,7 @@ class UpdateEquipmentController
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+
         } catch (EquipmentNotFoundException $e){
             $response->getBody()->write(json_encode([
                 'error' => $e->getMessage()

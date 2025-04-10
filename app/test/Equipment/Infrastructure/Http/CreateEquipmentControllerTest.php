@@ -2,8 +2,9 @@
 
 namespace App\Test\Equipment\Infrastructure\Http;
 
-use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
+use PDO;
+
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
@@ -17,12 +18,42 @@ use Slim\Psr7\Request as SlimRequest;
 
 class CreateEquipmentControllerTest extends TestCase
 {
+    private PDO $pdo;
+    private array $insertedEquipmentIds = [];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->pdo = $this->createPdoConnection();
+    }
+
+    protected function tearDown(): void
+    {
+        try {
+            if (!empty($this->insertedEquipmentIds)) {
+                $ids = implode(',', $this->insertedEquipmentIds);
+                $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
+            }
+        } catch (\Exception $e) {
+            error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+        } finally {
+            $this->insertedEquipmentIds = [];
+        }
+
+        parent::tearDown(); 
+    }
+
+    private function createPdoConnection(): PDO
+    {
+        return new PDO('mysql:host=db;dbname=test', 'root', 'root');
+    }
+
     /**
      * @test
      * @group happy-path
      * @group integration
      * @group equipment
-     * @group controller
+     * @group create-equipment
      */
     public function givenARequestToTheControllerWithValidDataWhenCreateEquipmentThenReturnTheEquipmentAsJson()
     {
@@ -35,7 +66,8 @@ class CreateEquipmentControllerTest extends TestCase
         ];
 
         $request = $this->createJsonRequest('POST', '/equipments', $equipmentData);
-        $stream = (new StreamFactory())->createStream(json_encode($equipmentData));
+        $requestBody = json_encode($equipmentData);
+        $stream = (new StreamFactory())->createStream($requestBody);
         $request = $request->withBody($stream);
 
         $response = $app->handle($request);
@@ -50,15 +82,101 @@ class CreateEquipmentControllerTest extends TestCase
 
         $repository = $app->getContainer()->get(EquipmentRepository::class);
         $createdEquipment = $repository->findById($responseData['equipment']['id']);
-
+        $this->insertedEquipmentIds[] = $createdEquipment->getId();
         $this->assertEquals($equipmentData['name'], $createdEquipment->getName());
         $this->assertEquals($equipmentData['type'], $createdEquipment->getType());
         $this->assertEquals($equipmentData['made_by'], $createdEquipment->getMadeBy());
     }
 
+    /**
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group equipment
+     * @group create-equipment
+     */
+    public function givenARequestToTheControllerWithInvalidDataWhenCreateEquipmentThenReturnErrorAsJson()
+    {
+        $app = $this->getAppInstance();
+
+        $invalidEquipmentData = [
+            'name' => '',
+            'type' => 'A sword with a hilt of gold and a blade of steel',
+            'made_by' => 'John Doe',
+        ];
+
+        $request = $this->createJsonRequest('POST', '/equipments', $invalidEquipmentData);
+        $response = $app->handle($request);
+
+        $payload = (string) $response->getBody();
+        $responseData = json_decode($payload, true);
+
+        $this->assertEquals(400, $response->getStatusCode());
+        $this->assertArrayHasKey('error', $responseData);
+        $this->assertEquals('Campo requerido: name', $responseData['error']);
+    }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group equipment
+     * @group create-equipment
+     */
+    public function givenARequestToTheControllerWithMissingFieldsWhenCreateEquipmentThenReturnErrorAsJson()
+    {
+        $app = $this->getAppInstance(); 
+
+        $incompleteEquipmentData = [
+            'name' => 'Sword of the King',
+            'type' => 'A sword with a hilt of gold and a blade of steel',
+            'made_by' => '',
+        ];
+
+        $request = $this->createJsonRequest('POST', '/equipments', $incompleteEquipmentData);
+        $response = $app->handle($request);
+
+        $payload = (string) $response->getBody();
+        $responseData = json_decode($payload, true);
+
+        $this->assertEquals(400, $response->getStatusCode());
+        $this->assertArrayHasKey('error', $responseData);
+        $this->assertEquals('Campo requerido: made_by', $responseData['error']);
+    }
+
+    /**
+     * @test
+     * @group unhappy-path  
+     * @group integration
+     * @group equipment
+     * @group create-equipment
+     */
+    public function givenARequestToTheControllerWithValidationExceptionWhenCreateEquipmentThenReturnErrorAsJson()
+    {
+        $app = $this->getAppInstance();
+
+        $invalidEquipmentData = [
+            'name' => str_repeat('a', 101),
+            'type' => 'A sword with a hilt of gold and a blade of steel',
+            'made_by' => 'John Doe',
+        ];
+
+        $request = $this->createJsonRequest('POST', '/equipments', $invalidEquipmentData);
+        $response = $app->handle($request);
+
+        $payload = (string) $response->getBody();
+        $responseData = json_decode($payload, true);
+
+        $this->assertEquals(500, $response->getStatusCode());
+        $this->assertArrayHasKey('error', $responseData);
+        $this->assertEquals('El nombre no puede exceder los 100 caracteres', $responseData['error']);
+    }
+    
+    
+
     private function getAppInstance(): App
     {
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../');
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../', '.env.test');
         $dotenv->load();
 
         $containerBuilder = new ContainerBuilder();
@@ -97,90 +215,6 @@ class CreateEquipmentControllerTest extends TestCase
         $request = new SlimRequest($method, $uri, $h, [], [], $stream);
         
         return $request->withParsedBody($data);
-    }
-
-    /**
-     * @test
-     * @group unhappy-path
-     * @group integration
-     * @group equipment
-     * @group controller
-     */
-    public function givenARequestToTheControllerWithInvalidDataWhenCreateEquipmentThenReturnErrorAsJson()
-    {
-        $app = $this->getAppInstance();
-
-        $invalidEquipmentData = [
-            'name' => '',
-            'type' => 'A sword with a hilt of gold and a blade of steel',
-            'made_by' => 'John Doe',
-        ];
-
-        $request = $this->createJsonRequest('POST', '/equipments', $invalidEquipmentData);
-        $response = $app->handle($request);
-
-        $payload = (string) $response->getBody();
-        $responseData = json_decode($payload, true);
-
-        $this->assertEquals(400, $response->getStatusCode());
-        $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals('Campo requerido: name', $responseData['error']);
-    }
-
-    /**
-     * @test
-     * @group unhappy-path
-     * @group integration
-     * @group equipment
-     * @group controller
-     */
-    public function givenARequestToTheControllerWithMissingFieldsWhenCreateEquipmentThenReturnErrorAsJson()
-    {
-        $app = $this->getAppInstance();
-
-        $incompleteEquipmentData = [
-            'name' => 'Sword of the King',
-            'type' => 'A sword with a hilt of gold and a blade of steel',
-            'made_by' => '',
-        ];
-
-        $request = $this->createJsonRequest('POST', '/equipments', $incompleteEquipmentData);
-        $response = $app->handle($request);
-
-        $payload = (string) $response->getBody();
-        $responseData = json_decode($payload, true);
-
-        $this->assertEquals(400, $response->getStatusCode());
-        $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals('Campo requerido: made_by', $responseData['error']);
-    }
-
-    /**
-     * @test
-     * @group unhappy-path
-     * @group integration
-     * @group equipment
-     * @group controller
-     */
-    public function givenARequestToTheControllerWithValidationExceptionWhenCreateEquipmentThenReturnErrorAsJson()
-    {
-        $app = $this->getAppInstance();
-
-        $invalidEquipmentData = [
-            'name' => str_repeat('a', 101), // Nombre con más de 100 caracteres
-            'type' => 'A sword with a hilt of gold and a blade of steel',
-            'made_by' => 'John Doe',
-        ];
-
-        $request = $this->createJsonRequest('POST', '/equipments', $invalidEquipmentData);
-        $response = $app->handle($request);
-
-        $payload = (string) $response->getBody();
-        $responseData = json_decode($payload, true);
-
-        $this->assertEquals(500, $response->getStatusCode());
-        $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals('El nombre no puede exceder los 100 caracteres', $responseData['error']);
     }
     
 }

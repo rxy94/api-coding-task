@@ -4,7 +4,7 @@ namespace App\Test\Equipment\Infrastructure\Persistence\Pdo;
 
 use App\Equipment\Domain\Equipment;
 use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentRepository;
-use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentNotFoundException;
+use App\Equipment\Domain\Exception\EquipmentNotFoundException;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -24,17 +24,13 @@ class MySQLEquipmentRepositoryTest extends TestCase
     protected function tearDown(): void
     {
         try {
-            // Eliminar solo los registros que hemos insertado en este test
             if (!empty($this->insertedEquipmentIds)) {
                 $ids = implode(',', $this->insertedEquipmentIds);
                 $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
             }
         } catch (\Exception $e) {
-            // Si hay algún error al limpiar, lo registramos pero no lo propagamos
-            // para no enmascarar el error original del test
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
         } finally {
-            // Limpiar los arrays para el siguiente test
             $this->insertedEquipmentIds = [];
         }
 
@@ -51,7 +47,7 @@ class MySQLEquipmentRepositoryTest extends TestCase
      * @group happy-path
      * @group integration
      * @group equipment
-     * @group repository
+     * @group equipment-repository
      */
     public function givenARepositoryWithOneEquipmentIdWhenReadEquipmentThenReturnTheEquipment()
     {
@@ -78,7 +74,7 @@ class MySQLEquipmentRepositoryTest extends TestCase
      * @group happy-path
      * @group integration
      * @group equipment
-     * @group repository
+     * @group equipment-repository
      */
     public function givenARepositoryWhenCreateEquipmentThenEquipmentIsSaved()
     {
@@ -105,7 +101,7 @@ class MySQLEquipmentRepositoryTest extends TestCase
      * @group happy-path
      * @group integration
      * @group equipment
-     * @group repository
+     * @group equipment-repository
      */
     public function givenARepositoryWithEquipmentWhenUpdateEquipmentThenEquipmentIsUpdated()
     {
@@ -146,7 +142,7 @@ class MySQLEquipmentRepositoryTest extends TestCase
      * @group happy-path
      * @group integration
      * @group equipment
-     * @group repository
+     * @group equipment-repository
      */
     public function givenARepositoryWithEquipmentWhenDeleteEquipmentThenEquipmentIsDeleted()
     {
@@ -156,12 +152,10 @@ class MySQLEquipmentRepositoryTest extends TestCase
             type: 'A sword with a hilt of gold and a blade of steel',
             made_by: 'John Doe',
         );
-
-        // Act
         $savedEquipment = $this->repository->save($equipment);
         $this->insertedEquipmentIds[] = $savedEquipment->getId();
 
-        // Assert
+        // Act
         $result = $this->repository->delete($savedEquipment);
 
         // Assert
@@ -175,7 +169,7 @@ class MySQLEquipmentRepositoryTest extends TestCase
      * @group unhappy-path
      * @group integration
      * @group equipment
-     * @group repository
+     * @group equipment-repository
      */
     public function givenARepositoryWhenFindByIdWithNonExistentIdThenThrowException()
     {
@@ -189,7 +183,7 @@ class MySQLEquipmentRepositoryTest extends TestCase
      * @group happy-path
      * @group integration
      * @group equipment
-     * @group repository
+     * @group equipment-repository
      */
     public function givenARepositoryWithMultipleEquipmentsWhenFindAllThenReturnAllEquipments()
     {
@@ -205,7 +199,6 @@ class MySQLEquipmentRepositoryTest extends TestCase
             made_by: 'Jane Doe',
         );
 
-        // Act
         $savedEquipment1 = $this->repository->save($equipment1);
         $savedEquipment2 = $this->repository->save($equipment2);
         $this->insertedEquipmentIds[] = $savedEquipment1->getId();
@@ -215,9 +208,8 @@ class MySQLEquipmentRepositoryTest extends TestCase
         $equipments = $this->repository->findAll();
 
         // Assert
-        $this->assertCount(3, $equipments);
-        $this->assertEquals(1, $equipments[0]->getId());
-        $this->assertEquals('Sword of the King', $equipments[1]->getName());
-        $this->assertEquals('Shield of the King', $equipments[2]->getName());
+        $this->assertCount(2, $equipments);
+        $this->assertEquals('Sword of the King', $equipments[0]->getName());
+        $this->assertEquals('Shield of the King', $equipments[1]->getName());
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Equipment\Infrastructure\Http;
 
 use App\Equipment\Application\DeleteEquipmentUseCase;
-use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentNotFoundException;
+use App\Equipment\Domain\Exception\EquipmentNotFoundException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -27,7 +27,7 @@ class DeleteEquipmentByIdController
 
         } catch (EquipmentNotFoundException $e) {
             $response->getBody()->write(json_encode([
-                'error' => 'Equipamiento no encontrado'
+                'error' => $e->getMessage()
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);

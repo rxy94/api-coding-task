@@ -4,8 +4,6 @@ namespace App\Test\Character\Infrastructure\Http;
 
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
-use App\Character\Domain\CharacterToArrayTransformer;
-use App\Character\Domain\Exception\CharacterValidationException;
 use App\Character\Infrastructure\Persistence\Pdo\Exception\CharacterNotFoundException;
 use PDO;
 

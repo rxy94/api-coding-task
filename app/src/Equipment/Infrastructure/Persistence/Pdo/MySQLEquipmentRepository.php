@@ -4,13 +4,16 @@ namespace App\Equipment\Infrastructure\Persistence\Pdo;
 
 use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
-use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentNotFoundException;
+use App\Equipment\Domain\Exception\EquipmentNotFoundException;
 use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentsNotFoundException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
 use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
 use PDO;
 
+/**
+ * Maneja las operaciones directas con la base de datos
+ */
 class MySQLEquipmentRepository implements EquipmentRepository
 {
     public function __construct(private PDO $pdo)
