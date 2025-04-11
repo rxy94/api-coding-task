@@ -57,7 +57,7 @@ class UpdateCharacterController
             $character = $this->updateCharacterUseCase->execute($useCaseRequest);
 
             $response->getBody()->write(json_encode([
-                'character' => CharacterToArrayTransformer::transform($character),
+                'character' => CharacterToArrayTransformer::transform($character->getCharacter()),
                 'message' => self::SUCCESS_MESSAGE
             ]));
 

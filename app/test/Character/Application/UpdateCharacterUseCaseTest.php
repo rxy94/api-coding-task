@@ -50,12 +50,12 @@ class UpdateCharacterUseCaseTest extends TestCase
         $result = $sut->execute($request);
 
         // Assert
-        $this->assertEquals($characterId, $result->getId());
-        $this->assertEquals('New Name', $result->getName());
-        $this->assertEquals('1995-05-05', $result->getBirthDate());
-        $this->assertEquals('New Kingdom', $result->getKingdom());
-        $this->assertEquals(2, $result->getEquipmentId());
-        $this->assertEquals(2, $result->getFactionId());
+        $this->assertEquals($characterId, $result->getCharacter()->getId());
+        $this->assertEquals('New Name', $result->getCharacter()->getName());
+        $this->assertEquals('1995-05-05', $result->getCharacter()->getBirthDate());
+        $this->assertEquals('New Kingdom', $result->getCharacter()->getKingdom());
+        $this->assertEquals(2, $result->getCharacter()->getEquipmentId());
+        $this->assertEquals(2, $result->getCharacter()->getFactionId());
     }
 
     private function mockCharacterRepository(array $characters): CharacterRepository
