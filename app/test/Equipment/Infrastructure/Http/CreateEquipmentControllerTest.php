@@ -3,6 +3,7 @@
 namespace App\Test\Equipment\Infrastructure\Http;
 
 use App\Equipment\Domain\EquipmentRepository;
+use App\Equipment\Domain\Exception\EquipmentValidationException;
 use App\Equipment\Infrastructure\Http\CreateEquipmentController;
 use PDO;
 use DI\ContainerBuilder;
@@ -171,7 +172,7 @@ class CreateEquipmentControllerTest extends TestCase
 
         $this->assertEquals(500, $response->getStatusCode());
         $this->assertArrayHasKey('error', $responseData);
-        $this->assertEquals('El nombre no puede exceder los 100 caracteres', $responseData['error']);
+        $this->assertEquals(EquipmentValidationException::withNameLengthError()->getMessage(), $responseData['error']);
     }
     
     

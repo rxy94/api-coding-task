@@ -13,7 +13,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class UpdateFactionController
 {
     private const SUCCESS_MESSAGE = 'Facción actualizada correctamente';
-    private const ERROR_MESSAGE = 'Error al actualizar la facción';
 
     public function __construct(
         private UpdateFactionUseCase $updateFactionUseCase,
@@ -23,11 +22,6 @@ class UpdateFactionController
     public static function getSuccessMessage(): string
     {
         return self::SUCCESS_MESSAGE;
-    }
-    
-    public static function getErrorMessage(): string
-    {
-        return self::ERROR_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
@@ -77,7 +71,6 @@ class UpdateFactionController
 
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
-                'error' => self::ERROR_MESSAGE,
                 'message' => $e->getMessage()
             ]));
 

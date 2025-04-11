@@ -6,6 +6,7 @@ use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\Exception\FactionNotFoundException;
 use App\Faction\Domain\Exception\FactionValidationException;
+use App\Faction\Infrastructure\Http\UpdateFactionController;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PDO;
@@ -21,16 +22,12 @@ use Slim\Psr7\Request as SlimRequest;
 class UpdateFactionControllerTest extends TestCase
 {
     private PDO $pdo;
-    private App $app;
-    private FactionRepository $repository;
     private array $insertedFactionIds = [];
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->pdo = $this->createPdoConnection();
-        $this->app = $this->getAppInstance();
-        $this->repository = $this->app->getContainer()->get(FactionRepository::class);
     }
 
     protected function tearDown(): void
@@ -63,12 +60,15 @@ class UpdateFactionControllerTest extends TestCase
      */
     public function givenARequestToTheControllerWithValidDataWhenUpdateFactionThenReturnTheFactionAsJson()
     {
+        $app = $this->getAppInstance();
+        $repository = $app->getContainer()->get(FactionRepository::class);
+
         $faction = new Faction(
             'Kingdom of Spain',
             'A powerful kingdom in the south of Europe'
         );
 
-        $savedFaction = $this->repository->save($faction);
+        $savedFaction = $repository->save($faction);
         $this->insertedFactionIds[] = $savedFaction->getId();
 
         $updateData = [
@@ -77,15 +77,16 @@ class UpdateFactionControllerTest extends TestCase
         ];
 
         $request = $this->createJsonRequest('PUT', '/factions/' . $savedFaction->getId(), $updateData);
-        $response = $this->app->handle($request);
+        $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('La facción se ha actualizado correctamente', $responseData['message']);
+        $this->assertEquals(UpdateFactionController::getSuccessMessage(), $responseData['message']);
 
-        $updatedFaction = $this->repository->findById($savedFaction->getId());
+        $updatedFaction = $repository->findById($savedFaction->getId());
+
         $this->assertEquals($updateData['faction_name'], $updatedFaction->getName());
         $this->assertEquals($updateData['description'], $updatedFaction->getDescription());
     }
@@ -95,16 +96,19 @@ class UpdateFactionControllerTest extends TestCase
      * @group unhappy-path
      * @group acceptance
      * @group faction
-     * @group update-faction
+     * @group update-faction  
      */
     public function givenARequestToTheControllerWithInvalidDataWhenUpdateFactionThenReturnErrorAsJson()
     {
+        $app = $this->getAppInstance();
+        $repository = $app->getContainer()->get(FactionRepository::class);
+
         $faction = new Faction(
             'Kingdom of Spain',
             'A powerful kingdom in the south of Europe'
         );
 
-        $savedFaction = $this->repository->save($faction);
+        $savedFaction = $repository->save($faction);
         $this->insertedFactionIds[] = $savedFaction->getId();
 
         $invalidUpdateData = [
@@ -113,7 +117,7 @@ class UpdateFactionControllerTest extends TestCase
         ];
 
         $request = $this->createJsonRequest('PUT', '/factions/' . $savedFaction->getId(), $invalidUpdateData);
-        $response = $this->app->handle($request);
+        $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
@@ -131,13 +135,15 @@ class UpdateFactionControllerTest extends TestCase
      */
     public function givenARequestToTheControllerWithNonExistentIdWhenUpdateFactionThenReturnErrorAsJson()
     {
+        $app = $this->getAppInstance();
+
         $updateData = [
             'faction_name' => 'Kingdom of Atlantis',
             'description' => 'A lost kingdom'
         ];
 
-        $request = $this->createJsonRequest('PUT', '/factions/999999', $updateData);
-        $response = $this->app->handle($request);
+        $request = $this->createJsonRequest('PUT', '/factions/999', $updateData);
+        $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
@@ -175,7 +181,8 @@ class UpdateFactionControllerTest extends TestCase
         $uri = new Uri('', '', 80, $path);
         $handle = fopen('php://temp', 'w+');
         $stream = (new StreamFactory())->createStreamFromResource($handle);
-        fwrite($handle, json_encode($data));
+        $jsonData = json_encode($data);
+        fwrite($handle, $jsonData);
         rewind($handle);
 
         $h = new Headers();
@@ -183,6 +190,8 @@ class UpdateFactionControllerTest extends TestCase
             $h->addHeader($name, $value);
         }
 
-        return new SlimRequest($method, $uri, $h, [], [], $stream);
+        $request = new SlimRequest($method, $uri, $h, [], [], $stream);
+        
+        return $request->withParsedBody($data);
     }
 }

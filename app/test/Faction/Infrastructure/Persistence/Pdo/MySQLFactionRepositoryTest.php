@@ -96,6 +96,7 @@ class MySQLFactionRepositoryTest extends TestCase
      * @group integration
      * @group faction
      * @group repository
+     * @group faction-repository
      */
     public function givenARepositoryWithFactionWhenUpdateFactionThenFactionIsUpdated()
     {
@@ -106,6 +107,8 @@ class MySQLFactionRepositoryTest extends TestCase
         
         $savedFaction = $this->repository->save($faction);
         $this->insertedFactionIds[] = $savedFaction->getId();
+
+        $this->assertNotNull($savedFaction->getId());
 
         $updatedFaction = new Faction(
             'Kingdom of France',

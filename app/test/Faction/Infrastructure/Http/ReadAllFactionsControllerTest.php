@@ -5,6 +5,7 @@ namespace App\Test\Faction\Infrastructure\Http;
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\FactionToArrayTransformer;
+use App\Faction\Infrastructure\Http\ReadFactionController;
 use PDO;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
@@ -91,7 +92,7 @@ class ReadAllFactionsControllerTest extends TestCase
                 },
                 $savedFactions
             ),
-            'message' => 'Facciones obtenidas correctamente'
+            'message' => ReadFactionController::getSuccessMessage()
         ]);
 
         $this->assertEquals($serializedPayload, $payload);
@@ -114,10 +115,41 @@ class ReadAllFactionsControllerTest extends TestCase
         $payload = (string) $response->getBody();
         $serializedPayload = json_encode([
             'factions' => [],
-            'message' => 'Facciones obtenidas correctamente'
+            'message' => ReadFactionController::getSuccessMessage()
         ]);
 
         $this->assertEquals($serializedPayload, $payload);
+        $this->assertEquals(200, $response->getStatusCode());
+    }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group acceptance
+     * @group faction
+     * @group read-all-factions
+     */
+    public function givenADatabaseFailureWhenReadAllFactionsThenReturnServerError()
+    {
+        $app = $this->getAppInstance();
+
+        try {
+            $this->pdo->exec("RENAME TABLE factions TO factions_backup");
+
+            $request = $this->createRequest('GET', '/factions');
+            $response = $app->handle($request);
+
+            $payload = (string) $response->getBody();
+            $serializedPayload = json_encode([
+                'message' => ReadFactionController::getErrorMessage()
+            ]);
+
+            $this->assertEquals($serializedPayload, $payload);
+            $this->assertEquals(500, $response->getStatusCode());
+
+        } catch (\Exception $e) {
+            $this->pdo->exec("RENAME TABLE factions_backup TO factions");
+        }
     }
 
     private function getAppInstance(): App

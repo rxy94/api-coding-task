@@ -6,7 +6,7 @@ use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\Exception\FactionValidationException;
 use App\Faction\Application\CreateFactionUseCase;
 use App\Faction\Application\CreateFactionUseCaseRequest;
-use App\Faction\Infrastructure\Persistence\InMemory\ArrayFactionRepository;
+use App\Faction\Infrastructure\InMemory\ArrayFactionRepository;
 use DomainException;
 use PHPUnit\Framework\TestCase;
 use App\Test\Faction\Application\MotherObject\CreateFactionUseCaseRequestMotherObject;

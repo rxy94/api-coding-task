@@ -53,9 +53,9 @@ class MySQLEquipmentRepositoryTest extends TestCase
     {
         // Arrange
         $equipment = new Equipment(
-            name: 'Sword of the King',
-            type: 'A sword with a hilt of gold and a blade of steel',
-            made_by: 'John Doe',
+            'Sword of the King',
+            'A sword with a hilt of gold and a blade of steel',
+            'John Doe',
         );
 
         // Act
@@ -80,9 +80,9 @@ class MySQLEquipmentRepositoryTest extends TestCase
     {
         // Arrange
         $equipment = new Equipment(
-            name: 'Sword of the King',
-            type: 'A sword with a hilt of gold and a blade of steel',
-            made_by: 'John Doe',
+            'Sword of the King',
+            'A sword with a hilt of gold and a blade of steel',
+            'John Doe',
         );
 
         // Act
@@ -107,9 +107,9 @@ class MySQLEquipmentRepositoryTest extends TestCase
     {
         // Arrange
         $equipment = new Equipment(
-            name: 'Sword of the King',
-            type: 'A sword with a hilt of gold and a blade of steel',
-            made_by: 'John Doe',
+            'Sword of the King',
+            'A sword with a hilt of gold and a blade of steel',
+            'John Doe',
         );
 
         // Act
@@ -120,9 +120,9 @@ class MySQLEquipmentRepositoryTest extends TestCase
         $this->assertNotNull($savedEquipment->getId()); 
 
         $updatedEquipment = new Equipment(
-            name: 'Updated Sword',
-            type: 'An updated sword',
-            made_by: 'Jane Doe',
+            'Updated Sword',
+            'An updated sword',
+            'Jane Doe',
             id: $savedEquipment->getId()
         );
 
@@ -148,9 +148,9 @@ class MySQLEquipmentRepositoryTest extends TestCase
     {
         // Arrange
         $equipment = new Equipment(
-            name: 'Sword of the King',
-            type: 'A sword with a hilt of gold and a blade of steel',
-            made_by: 'John Doe',
+            'Sword of the King',
+            'A sword with a hilt of gold and a blade of steel',
+            'John Doe',
         );
         $savedEquipment = $this->repository->save($equipment);
         $this->insertedEquipmentIds[] = $savedEquipment->getId();
@@ -189,14 +189,14 @@ class MySQLEquipmentRepositoryTest extends TestCase
     {
         // Arrange
         $equipment1 = new Equipment(
-            name: 'Sword of the King',
-            type: 'A sword with a hilt of gold and a blade of steel',
-            made_by: 'John Doe',
+            'Sword of the King',
+            'A sword with a hilt of gold and a blade of steel',
+            'John Doe',
         );
         $equipment2 = new Equipment(
-            name: 'Shield of the King',
-            type: 'A shield with a hilt of gold and a blade of steel',
-            made_by: 'Jane Doe',
+            'Shield of the King',
+            'A shield with a hilt of gold and a blade of steel',
+            'Jane Doe',
         );
 
         $savedEquipment1 = $this->repository->save($equipment1);

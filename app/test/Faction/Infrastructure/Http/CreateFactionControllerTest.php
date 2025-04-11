@@ -4,8 +4,8 @@ namespace App\Test\Faction\Infrastructure\Http;
 
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\Exception\FactionValidationException;
+use App\Faction\Infrastructure\Http\CreateFactionController;
 use PDO;
-
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
@@ -74,7 +74,7 @@ class CreateFactionControllerTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertArrayHasKey('faction', $responseData);
         $this->assertArrayHasKey('message', $responseData);
-        $this->assertEquals('La facción se ha creado correctamente', $responseData['message']);
+        $this->assertEquals(CreateFactionController::getSuccessMessage(), $responseData['message']);
 
         $repository = $app->getContainer()->get(FactionRepository::class);
         $createdFaction = $repository->findById($responseData['faction']['id']);

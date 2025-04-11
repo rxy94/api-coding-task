@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Faction\Infrastructure\Persistence\InMemory;
+namespace App\Faction\Infrastructure\InMemory;
 
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionFactory;

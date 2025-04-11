@@ -6,7 +6,7 @@ use App\Faction\Application\DeleteFactionUseCase;
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\Exception\FactionNotFoundException;
-use App\Faction\Infrastructure\Persistence\InMemory\ArrayFactionRepository;
+use App\Faction\Infrastructure\InMemory\ArrayFactionRepository;
 use PHPUnit\Framework\TestCase;
 
 

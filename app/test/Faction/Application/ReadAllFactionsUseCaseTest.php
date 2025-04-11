@@ -5,7 +5,7 @@ namespace App\Test\Faction\Application;
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Application\ReadFactionUseCase;
-use App\Faction\Infrastructure\Persistence\InMemory\ArrayFactionRepository;
+use App\Faction\Infrastructure\InMemory\ArrayFactionRepository;
 
 use PHPUnit\Framework\TestCase;
 

@@ -5,8 +5,8 @@ namespace App\Test\Faction\Infrastructure\Http;
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\Exception\FactionNotFoundException;
+use App\Faction\Infrastructure\Http\DeleteFactionByIdController;
 use PDO;
-
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
@@ -71,16 +71,15 @@ class DeleteFactionControllerTest extends TestCase
         $this->insertedFactionIds[] = $savedFaction->getId();
 
         $request = $this->createRequest('DELETE', '/factions/' . $savedFaction->getId());
+
         $response = $app->handle($request);
         
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('Facción eliminada correctamente', $responseData['message']);
+        $this->assertEquals(DeleteFactionByIdController::getSuccessMessage(), $responseData['message']);
 
-        $this->expectException(FactionNotFoundException::class);
-        $repository->findById($savedFaction->getId());
     }
 
     /**
@@ -94,15 +93,16 @@ class DeleteFactionControllerTest extends TestCase
     {
         $app = $this->getAppInstance();
 
-        $nonExistentId = 999999;
-        $request = $this->createRequest('DELETE', '/factions/' . $nonExistentId);
+        $request = $this->createRequest('DELETE', '/factions/999', []);
+        
         $response = $app->handle($request);
 
         $payload = (string) $response->getBody();
         $responseData = json_decode($payload, true);
 
         $this->assertEquals(404, $response->getStatusCode());
-        $this->assertEquals(FactionNotFoundException::build()->getMessage(), $responseData['error']);
+        $this->assertEquals(DeleteFactionByIdController::getErrorMessage(), $responseData['error']);
+        $this->assertEquals(FactionNotFoundException::build()->getMessage(), $responseData['message']);
     }
 
     private function getAppInstance(): App

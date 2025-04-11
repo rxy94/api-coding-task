@@ -6,7 +6,7 @@ use App\Faction\Domain\Faction;
 use App\Faction\Domain\FactionRepository;
 use App\Faction\Domain\FactionToArrayTransformer;
 use App\Faction\Domain\Exception\FactionNotFoundException;
-
+use App\Faction\Infrastructure\Http\ReadFactionByIdController;
 use PDO;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
@@ -83,7 +83,7 @@ class ReadFactionControllerTest extends TestCase
             FactionToArrayTransformer::transform($savedFaction),
             $responseData['faction']
         );
-        $this->assertEquals('Facción encontrada correctamente', $responseData['message']);
+        $this->assertEquals(ReadFactionByIdController::getSuccessMessage(), $responseData['message']);
     }
 
     /**
