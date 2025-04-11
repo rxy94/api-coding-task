@@ -5,6 +5,9 @@ namespace App\Test\Equipment\Infrastructure\Persistence\Pdo;
 use App\Equipment\Domain\Equipment;
 use App\Equipment\Infrastructure\Persistence\Pdo\MySQLEquipmentRepository;
 use App\Equipment\Domain\Exception\EquipmentNotFoundException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -166,20 +169,6 @@ class MySQLEquipmentRepositoryTest extends TestCase
 
     /**
      * @test
-     * @group unhappy-path
-     * @group integration
-     * @group equipment
-     * @group equipment-repository
-     */
-    public function givenARepositoryWhenFindByIdWithNonExistentIdThenThrowException()
-    {
-        // Act & Assert
-        $this->expectException(EquipmentNotFoundException::class);
-        $this->repository->findById(999);
-    }
-
-    /**
-     * @test
      * @group happy-path
      * @group integration
      * @group equipment
@@ -212,4 +201,96 @@ class MySQLEquipmentRepositoryTest extends TestCase
         $this->assertEquals('Sword of the King', $equipments[0]->getName());
         $this->assertEquals('Shield of the King', $equipments[1]->getName());
     }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group equipment
+     * @group equipment-repository
+     */
+    public function givenARepositoryWhenFindByIdWithNonExistentIdThenThrowException()
+    {
+        // Act & Assert
+        $this->expectException(EquipmentNotFoundException::class);
+        $this->repository->findById(999);
+    }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group equipment
+     * @group equipment-repository
+     */
+    public function testRowInsertionFailsUsingExistingPdoConnection(): void
+    {
+        $equipment = new Equipment(
+            'Test Equipment',
+            'Test Type',
+            'Test Made By'
+        );
+
+        $this->pdo->exec("RENAME TABLE equipments TO equipments_temp");
+
+        try {
+            $this->expectException(RowInsertionFailedException::class);
+            $this->repository->save($equipment);
+        } finally {
+            $this->pdo->exec("RENAME TABLE equipments_temp TO equipments");
+        }
+    }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group equipment
+     * @group equipment-repository
+     */
+    public function testRowUpdateFailsUsingExistingPdoConnection(): void
+    {
+        $equipment = new Equipment(
+            'Test Equipment',
+            'Test Type',
+            'Test Made By',
+            999
+        );
+
+        $this->pdo->exec("RENAME TABLE equipments TO equipments_temp");
+
+        try {
+            $this->expectException(RowUpdateFailedException::class);
+            $this->repository->save($equipment);
+        } finally {
+            $this->pdo->exec("RENAME TABLE equipments_temp TO equipments");
+        }
+    }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group equipment
+     * @group equipment-repository
+     */
+    public function testRowDeletionFailsUsingExistingPdoConnection(): void
+    {
+        $equipment = new Equipment(
+            'Test Equipment',
+            'Test Type',
+            'Test Made By',
+            999
+        );
+
+        $this->pdo->exec("RENAME TABLE equipments TO equipments_temp");
+
+        try {
+            $this->expectException(RowDeletionFailedException::class);
+            $this->repository->delete($equipment);
+        } finally {
+            $this->pdo->exec("RENAME TABLE equipments_temp TO equipments");
+        }
+    }
+
 }

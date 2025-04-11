@@ -66,11 +66,15 @@ class MySQLFactionRepository implements FactionRepository
         $sql = 'INSERT INTO factions (faction_name, description)    
                 VALUES (:faction_name, :description)';
 
-        $stmt = $this->pdo->prepare($sql);
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute(
+                MySQLFactionToArrayTransformer::transform($faction)
+            );
 
-        $result = $stmt->execute(
-            MySQLFactionToArrayTransformer::transform($faction)
-        );
+        } catch (\PDOException $e) {
+            throw RowInsertionFailedException::build();
+        }
 
         if (!$result) {
             throw RowInsertionFailedException::build();
@@ -90,10 +94,15 @@ class MySQLFactionRepository implements FactionRepository
                     description = :description 
                 WHERE id = :id';
 
-        $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute(
-            MySQLFactionToArrayTransformer::transform($faction)
-        );
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute(
+                MySQLFactionToArrayTransformer::transform($faction)
+            );
+        } catch (\PDOException $e) {
+            throw RowUpdateFailedException::build();
+        }
+
 
         if (!$result) {
             throw RowUpdateFailedException::build();
@@ -109,8 +118,13 @@ class MySQLFactionRepository implements FactionRepository
         }
  
         $sql = 'DELETE FROM factions WHERE id = :id';
-        $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute(['id' => $faction->getId()]);
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute(['id' => $faction->getId()]);
+        } catch (\PDOException $e) {
+            throw RowDeletionFailedException::build();
+        }
 
         if (!$result) {
             throw RowDeletionFailedException::build();

@@ -5,6 +5,9 @@ namespace App\Test\Faction\Infrastructure\Persistence\Pdo;
 use App\Faction\Domain\Faction;
 use App\Faction\Domain\Exception\FactionNotFoundException;
 use App\Faction\Infrastructure\Persistence\Pdo\MySQLFactionRepository;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -126,6 +129,37 @@ class MySQLFactionRepositoryTest extends TestCase
 
     /**
      * @test
+     * @group happy-path
+     * @group integration
+     * @group faction
+     * @group repository
+     * @group faction-repository
+     */
+    public function givenARepositoryWithMultipleFactionsWhenFindAllThenReturnAllFactions()
+    {
+        $faction1 = new Faction(
+            'Kingdom of Spain',
+            'A powerful kingdom in the south of Europe'
+        );
+        $faction2 = new Faction(
+            'Kingdom of France',
+            'A powerful kingdom in the north of Europe'
+        );
+
+        $savedFaction1 = $this->repository->save($faction1);
+        $savedFaction2 = $this->repository->save($faction2);
+        $this->insertedFactionIds[] = $savedFaction1->getId();
+        $this->insertedFactionIds[] = $savedFaction2->getId();
+
+        $factions = $this->repository->findAll();
+
+        $this->assertCount(2, $factions);
+        $this->assertEquals($savedFaction1->getId(), $factions[0]->getId());
+        $this->assertEquals($savedFaction2->getId(), $factions[1]->getId());
+    }
+
+    /**
+     * @test
      * @group unhappy-path
      * @group integration
      * @group faction
@@ -165,32 +199,76 @@ class MySQLFactionRepositoryTest extends TestCase
 
     /**
      * @test
-     * @group happy-path
+     * @group unhappy-path
      * @group integration
      * @group faction
-     * @group repository
      * @group faction-repository
      */
-    public function givenARepositoryWithMultipleFactionsWhenFindAllThenReturnAllFactions()
+    public function testRowInsertionFailsUsingExistingPdoConnection(): void
     {
-        $faction1 = new Faction(
-            'Kingdom of Spain',
-            'A powerful kingdom in the south of Europe'
-        );
-        $faction2 = new Faction(
-            'Kingdom of France',
-            'A powerful kingdom in the north of Europe'
+        $faction = new Faction(
+            'Test Faction',
+            'Test Description'
         );
 
-        $savedFaction1 = $this->repository->save($faction1);
-        $savedFaction2 = $this->repository->save($faction2);
-        $this->insertedFactionIds[] = $savedFaction1->getId();
-        $this->insertedFactionIds[] = $savedFaction2->getId();
+        $this->pdo->exec("RENAME TABLE factions TO factions_temp");
 
-        $factions = $this->repository->findAll();
-
-        $this->assertCount(2, $factions);
-        $this->assertEquals($savedFaction1->getId(), $factions[0]->getId());
-        $this->assertEquals($savedFaction2->getId(), $factions[1]->getId());
+        try {
+            $this->expectException(RowInsertionFailedException::class);
+            $this->repository->save($faction);
+        } finally {
+            $this->pdo->exec("RENAME TABLE factions_temp TO factions");
+        }
     }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group faction
+     * @group faction-repository
+     */
+    public function testRowUpdateFailsUsingExistingPdoConnection(): void
+    {
+        $faction = new Faction(
+            'Test Faction',
+            'Test Description',
+            999
+        );
+
+        $this->pdo->exec("RENAME TABLE factions TO factions_temp");
+
+        try {
+            $this->expectException(RowUpdateFailedException::class);
+            $this->repository->save($faction);
+        } finally {
+            $this->pdo->exec("RENAME TABLE factions_temp TO factions");
+        }
+    }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group faction
+     * @group faction-repository
+     */
+    public function testRowDeletionFailsUsingExistingPdoConnection(): void
+    {
+        $faction = new Faction(
+            'Test Faction',
+            'Test Description',
+            999
+        );
+
+        $this->pdo->exec("RENAME TABLE factions TO factions_temp");
+
+        try {
+            $this->expectException(RowDeletionFailedException::class);
+            $this->repository->delete($faction);
+        } finally {
+            $this->pdo->exec("RENAME TABLE factions_temp TO factions");
+        }
+    }
+
 }

@@ -67,12 +67,15 @@ class MySQLCharacterRepository implements CharacterRepository
     {
         $sql = 'INSERT INTO characters (name, birth_date, kingdom, equipment_id, faction_id) 
                 VALUES (:name, :birth_date, :kingdom, :equipment_id, :faction_id)';
-        
-        $stmt = $this->pdo->prepare($sql);
 
-        $result = $stmt->execute(
-            MySQLCharacterToArrayTransformer::transform($character)
-        );
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute(
+                MySQLCharacterToArrayTransformer::transform($character)
+            );
+        } catch (\PDOException $e) {
+            throw RowInsertionFailedException::build();
+        }
 
         if (!$result) {
             throw RowInsertionFailedException::build();
@@ -97,11 +100,16 @@ class MySQLCharacterRepository implements CharacterRepository
                     equipment_id = :equipment_id, 
                     faction_id = :faction_id 
                 WHERE id = :id';
-        
-        $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute(
-            MySQLCharacterToArrayTransformer::transform($character)
-        );
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute(
+                MySQLCharacterToArrayTransformer::transform($character)
+            );
+
+        } catch (\PDOException $e) {
+            throw RowUpdateFailedException::build();
+        }
 
         if (!$result) {
             throw RowUpdateFailedException::build();
@@ -117,15 +125,20 @@ class MySQLCharacterRepository implements CharacterRepository
         }
 
         $sql = 'DELETE FROM characters WHERE id = :id';
-        $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute(['id' => $character->getId()]);
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute(['id' => $character->getId()]);
+
+        } catch (\PDOException $e) {
+            throw RowDeletionFailedException::build();
+        }
 
         if (!$result) {
             throw RowDeletionFailedException::build();
         }
 
         return $result;
-
     }
 
 }

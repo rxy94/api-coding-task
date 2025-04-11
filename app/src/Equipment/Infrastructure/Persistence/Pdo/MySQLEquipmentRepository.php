@@ -67,11 +67,14 @@ class MySQLEquipmentRepository implements EquipmentRepository
         $sql = 'INSERT INTO equipments (name, type, made_by)    
                 VALUES (:name, :type, :made_by)';
 
-        $stmt = $this->pdo->prepare($sql);
-
-        $result = $stmt->execute(
-            MySQLEquipmentToArrayTransformer::transform($equipment)
-        );
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute(
+                MySQLEquipmentToArrayTransformer::transform($equipment)
+            );
+        } catch (\PDOException $e) {
+            throw RowInsertionFailedException::build();
+        }
 
         if (!$result) {
             throw RowInsertionFailedException::build();
@@ -93,10 +96,14 @@ class MySQLEquipmentRepository implements EquipmentRepository
                     made_by = :made_by 
                 WHERE id = :id';
 
-        $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute(
-            MySQLEquipmentToArrayTransformer::transform($equipment)
-        );
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute(
+                MySQLEquipmentToArrayTransformer::transform($equipment)
+            );
+        } catch (\PDOException $e) {
+            throw RowUpdateFailedException::build();
+        }
 
         if (!$result) {
             throw RowUpdateFailedException::build();
@@ -112,8 +119,13 @@ class MySQLEquipmentRepository implements EquipmentRepository
         }
 
         $sql = 'DELETE FROM equipments WHERE id = :id';
-        $stmt = $this->pdo->prepare($sql);
-        $result = $stmt->execute(['id' => $equipment->getId()]);
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute(['id' => $equipment->getId()]);
+        } catch (\PDOException $e) {
+            throw RowDeletionFailedException::build();
+        }
 
         if (!$result) {
             throw RowDeletionFailedException::build();

@@ -5,6 +5,9 @@ namespace App\Test\Character\Infrastructure\Persistence\Pdo;
 use App\Character\Domain\Character;
 use App\Character\Domain\Exception\CharacterNotFoundException;
 use App\Character\Infrastructure\Persistence\Pdo\MySQLCharacterRepository;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowDeletionFailedException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowInsertionFailedException;
+use App\Shared\Infrastructure\Persistence\Pdo\Exception\RowUpdateFailedException;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -208,20 +211,6 @@ class MySQLCharacterRepositoryTest extends TestCase
 
     /**
      * @test
-     * @group unhappy-path
-     * @group integration
-     * @group character
-     * @group character-repository
-     */
-    public function givenARepositoryWhenFindByIdWithNonExistentIdThenThrowException()
-    {
-        // Act & Assert
-        $this->expectException(CharacterNotFoundException::class);
-        $this->repository->findById(999);
-    }
-
-    /**
-     * @test
      * @group happy-path
      * @group integration
      * @group character
@@ -258,4 +247,118 @@ class MySQLCharacterRepositoryTest extends TestCase
         $this->assertEquals('John Doe', $characters[0]->getName());
         $this->assertEquals('Jane Doe', $characters[1]->getName());
     }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group character
+     * @group character-repository
+     */
+    public function givenARepositoryWhenFindByIdWithNonExistentIdThenThrowException()
+    {
+        // Act & Assert
+        $this->expectException(CharacterNotFoundException::class);
+        $this->repository->findById(999);
+    }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group character
+     * @group character-repository
+     */
+    public function testRowDeletionFailsUsingExistingPdoConnection(): void
+    {
+        $character = new Character(
+            'Test Character',
+            '2000-01-01',
+            'Test Kingdom',
+            1,
+            1,
+            999
+        );
+
+        $this->pdo->exec("RENAME TABLE characters TO characters_temp");
+
+        try {
+            $this->expectException(RowDeletionFailedException::class);
+            $this->repository->delete($character);
+
+        } finally {
+            $this->pdo->exec("RENAME TABLE characters_temp TO characters");
+        }
+    }
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group character
+     * @group character-repository
+     */
+    public function testRowInsertionFailsUsingExistingPdoConnection(): void
+    {
+        $character = new Character(
+            'Test Character', 
+            '2000-01-01', 
+            'Test Kingdom', 
+            1,
+            1
+        );
+
+        $this->pdo->exec("RENAME TABLE characters TO characters_temp");
+
+        try {
+            $this->expectException(RowInsertionFailedException::class);
+            $this->repository->save($character);
+
+        } finally {
+            $this->pdo->exec("RENAME TABLE characters_temp TO characters");
+        }
+    }
+
+    /**
+     * Test para comprobar que, si la operación UPDATE falla, se lanza la excepción RowUpdateFailedException.
+     *
+     * En este test se simula el fallo en la consulta UPDATE renombrando temporalmente la tabla "characters"
+     * para provocar que la query en el método update (llamado a través de save para un Character con ID no nulo)
+     * falle y se lance la excepción personalizada.
+     *
+     * @test
+     * @group unhappy-path
+     * @group integration
+     * @group character
+     * @group character-repository
+     * @group ruyi
+     */
+    public function testRowUpdateFailsUsingExistingPdoConnection(): void
+    {
+        // Creamos un Character con un ID asignado para forzar la actualización (update)
+        $character = new Character(
+            'Test Character',
+            '2000-01-01',
+            'Test Kingdom',
+            1,   // equipment_id (valor de prueba)
+            1,   // faction_id (valor de prueba)
+            100  // id: se asume que el Character ya existe (para que se invoque update en save)
+        );
+
+        // Renombramos temporalmente la tabla "characters" para que la query UPDATE falle
+        $this->pdo->exec("RENAME TABLE characters TO characters_temp");
+
+        try {
+            // Esperamos que, al no existir la tabla "characters", la operación update falle y se lance la excepción RowUpdateFailedException
+            $this->expectException(RowUpdateFailedException::class);
+
+            // Como en el repositorio el método save detecta que el id no es nulo, se ejecuta la ruta de actualización
+            $this->repository->save($character);
+        } finally {
+            // Restauramos el nombre original de la tabla para no afectar otros tests
+            $this->pdo->exec("RENAME TABLE characters_temp TO characters");
+        }
+    }
+
+    
 }
