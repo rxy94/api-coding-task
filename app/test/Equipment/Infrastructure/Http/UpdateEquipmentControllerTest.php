@@ -5,6 +5,7 @@ namespace App\Test\Equipment\Infrastructure\Http;
 use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\Exception\EquipmentNotFoundException;
+use App\Equipment\Infrastructure\Http\UpdateEquipmentController;
 use PDO;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
@@ -87,7 +88,7 @@ class UpdateEquipmentControllerTest extends TestCase
         $responseData = json_decode($payload, true);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('El equipamiento se ha actualizado correctamente', $responseData['message']);
+        $this->assertEquals(UpdateEquipmentController::getSuccessMessage(), $responseData['message']);
 
         // Verificar que el equipamiento se actualizó correctamente en la base de datos
         $updatedEquipment = $repository->findById($savedEquipment->getId());
@@ -206,7 +207,7 @@ class UpdateEquipmentControllerTest extends TestCase
 
         // Verificar la respuesta
         $this->assertEquals(400, $response->getStatusCode());
-        $this->assertEquals("Missing required field: type", $responseData['error']);
+        $this->assertEquals("Campo requerido: type", $responseData['error']);
     }
 
     private function getAppInstance(): App

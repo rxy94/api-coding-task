@@ -5,6 +5,7 @@ namespace App\Test\Equipment\Infrastructure\Http;
 use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\Exception\EquipmentNotFoundException;
+use App\Equipment\Infrastructure\Http\DeleteEquipmentByIdController;
 use PDO;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
@@ -31,17 +32,20 @@ class DeleteEquipmentControllerTest extends TestCase
 
     protected function tearDown(): void
     {
-        parent::tearDown();
         try {
             if (!empty($this->insertedEquipmentIds)) {
                 $ids = implode(',', $this->insertedEquipmentIds);
                 $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
             }
+
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+
         } finally {
             $this->insertedEquipmentIds = [];
         }
+
+        parent::tearDown();
     }
 
     private function createPdoConnection(): PDO
@@ -83,7 +87,7 @@ class DeleteEquipmentControllerTest extends TestCase
         
         // Verificar la respuesta
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals('Equipamiento eliminado correctamente', $responseData['message']);
+        $this->assertEquals(DeleteEquipmentByIdController::getSuccessMessage(), $responseData['message']);
     }
 
     /**

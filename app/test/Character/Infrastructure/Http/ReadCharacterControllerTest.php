@@ -8,7 +8,6 @@ use App\Character\Domain\CharacterToArrayTransformer;
 use App\Character\Domain\Exception\CharacterNotFoundException;
 use App\Character\Infrastructure\Http\ReadCharacterByIdController;
 use PDO;
-
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
@@ -64,8 +63,10 @@ class ReadCharacterControllerTest extends TestCase
                 $ids = implode(',', $this->insertedFactionIds);
                 $this->pdo->exec("DELETE FROM factions WHERE id IN ($ids)");
             }
+            
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+
         } finally {
             $this->insertedCharacterIds = [];
             $this->insertedEquipmentIds = [];

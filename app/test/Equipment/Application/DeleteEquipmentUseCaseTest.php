@@ -6,7 +6,7 @@ use App\Equipment\Application\DeleteEquipmentUseCase;
 use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Infrastructure\InMemory\ArrayEquipmentRepository;
-use App\Equipment\Infrastructure\Persistence\Pdo\Exception\EquipmentNotFoundException;
+use App\Equipment\Domain\Exception\EquipmentNotFoundException;
 use PHPUnit\Framework\TestCase;
 
 

@@ -10,7 +10,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class DeleteEquipmentByIdController
 {
     private const SUCCESS_MESSAGE = 'Equipo eliminado correctamente';
-    private const ERROR_MESSAGE = 'Error al eliminar el equipo';
 
     public function __construct(
         private DeleteEquipmentUseCase $deleteEquipmentUseCase
@@ -20,11 +19,6 @@ class DeleteEquipmentByIdController
     public static function getSuccessMessage(): string
     {
         return self::SUCCESS_MESSAGE;
-    }
-
-    public static function getErrorMessage(): string
-    {
-        return self::ERROR_MESSAGE;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
@@ -41,15 +35,13 @@ class DeleteEquipmentByIdController
 
         } catch (EquipmentNotFoundException $e) {
             $response->getBody()->write(json_encode([
-                'error' => self::ERROR_MESSAGE,
-                'message' => $e->getMessage()
+                'error' => $e->getMessage()
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
             
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
-                'error' => self::ERROR_MESSAGE,
                 'message' => $e->getMessage()
             ]));
 

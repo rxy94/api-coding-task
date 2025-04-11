@@ -5,6 +5,7 @@ namespace App\Test\Equipment\Infrastructure\Http;
 use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\EquipmentToArrayTransformer;
+use App\Equipment\Infrastructure\Http\ReadEquipmentController;
 use PDO;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
@@ -35,8 +36,10 @@ class ReadAllEquipmentsControllerTest extends TestCase
                 $ids = implode(',', $this->insertedEquipmentIds);
                 $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
             }
+
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+
         } finally {
             $this->insertedEquipmentIds = [];
         }
@@ -96,7 +99,7 @@ class ReadAllEquipmentsControllerTest extends TestCase
                 },
                 $savedEquipments
             ),
-            'message' => 'Equipos obtenidos correctamente'
+            'message' => ReadEquipmentController::getSuccessMessage()
         ]);
 
         $this->assertEquals($serializedPayload, $payload);
@@ -119,12 +122,43 @@ class ReadAllEquipmentsControllerTest extends TestCase
         $payload = (string) $response->getBody();
         $serializedPayload = json_encode([
             'equipments' => [],
-            'message' => 'Equipos obtenidos correctamente'
+            'message' => ReadEquipmentController::getSuccessMessage()
         ]);
 
         $this->assertEquals($serializedPayload, $payload);
+        $this->assertEquals(200, $response->getStatusCode());
     }
-    
+
+    /**
+     * @test
+     * @group unhappy-path
+     * @group acceptance
+     * @group equipment
+     * @group read-all-equipments
+     */
+    public function givenADatabaseFailureWhenReadAllEquipmentsThenReturnServerError()
+    {
+        $app = $this->getAppInstance();
+
+        try {
+            $this->pdo->exec('RENAME TABLE equipments TO equipments_backup');
+     
+            $request = $this->createRequest('GET', '/equipments');
+            $response = $app->handle($request);
+
+            $payload = (string) $response->getBody();
+            $serializedPayload = json_encode([
+                'message' => ReadEquipmentController::getErrorMessage()
+            ]);
+
+            $this->assertEquals($serializedPayload, $payload);
+            $this->assertEquals(500, $response->getStatusCode());
+
+        } finally {
+            $this->pdo->exec('RENAME TABLE equipments_backup TO equipments');   
+        }
+    }
+
     private function getAppInstance(): App
     {
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../', '.env.test');

@@ -5,10 +5,8 @@ namespace App\Test\Character\Application;
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterNotFoundException;
-use App\Character\Domain\Exception\CharacterValidationException;
 use App\Character\Application\ReadCharacterByIdUseCase;
 use App\Character\Infrastructure\InMemory\ArrayCharacterRepository;
-use App\Character\Domain\Service\CharacterValidator;
 
 use PHPUnit\Framework\TestCase;
 

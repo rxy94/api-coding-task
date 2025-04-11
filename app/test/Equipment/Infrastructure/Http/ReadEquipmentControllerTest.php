@@ -6,6 +6,7 @@ use App\Equipment\Domain\Equipment;
 use App\Equipment\Domain\EquipmentRepository;
 use App\Equipment\Domain\EquipmentToArrayTransformer;
 use App\Equipment\Domain\Exception\EquipmentNotFoundException;
+use App\Equipment\Infrastructure\Http\ReadEquipmentByIdController;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PDO;
@@ -66,9 +67,9 @@ class ReadEquipmentControllerTest extends TestCase
         $repository = $app->getContainer()->get(EquipmentRepository::class);
 
         $expectedEquipment = new Equipment(
-            name: 'Sword of the King',
-            type: 'A sword with a hilt of gold and a blade of steel',
-            made_by: 'John Doe',
+            'Sword of the King',
+            'A sword with a hilt of gold and a blade of steel',
+            'John Doe',
         );
         
         $savedEquipment = $repository->save($expectedEquipment);
@@ -86,12 +87,12 @@ class ReadEquipmentControllerTest extends TestCase
             EquipmentToArrayTransformer::transform($savedEquipment),
             $responseData['equipment']
         );
-        $this->assertEquals('Equipamiento encontrado correctamente', $responseData['message']);
+        $this->assertEquals(ReadEquipmentByIdController::getSuccessMessage(), $responseData['message']);
     }
 
     /**
      * @test
-     * @group unhappy-path
+     * @group unhappy-path  
      * @group acceptance
      * @group equipment
      * @group read-equipment
@@ -115,7 +116,7 @@ class ReadEquipmentControllerTest extends TestCase
 
     private function getAppInstance(): App
     {
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../');
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../../../../', '.env.test');
         $dotenv->load();
 
         $containerBuilder = new ContainerBuilder();

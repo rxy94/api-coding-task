@@ -5,10 +5,8 @@ namespace App\Test\Character\Infrastructure\Http;
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\CharacterToArrayTransformer;
-use App\Character\Domain\Exception\CharactersNotFoundException;
 use App\Character\Infrastructure\Http\ReadCharacterController;
 use PDO;
-
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
@@ -87,8 +85,10 @@ class ReadAllCharactersControllerTest extends TestCase
                     $this->pdo->exec($sql);
                 }
             }
+
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+
         } finally {
             $this->insertedCharacterIds = [];
             $this->insertedEquipmentIds = [];
@@ -178,6 +178,7 @@ class ReadAllCharactersControllerTest extends TestCase
         $responseData = json_decode($payload, true);
 
         $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals([], $responseData['characters']);
     }
 
     /**
@@ -192,11 +193,11 @@ class ReadAllCharactersControllerTest extends TestCase
     public function givenADatabaseFailureWhenReadAllCharactersThenReturnServerError()
     {
         $app = $this->getAppInstance();
-
-        // Provocamos un fallo real en la DB
-        $this->pdo->exec('RENAME TABLE characters TO characters_backup');
-
+        
         try {
+            // Provocamos un fallo real en la DB
+            $this->pdo->exec('RENAME TABLE characters TO characters_backup');
+            
             $request = $this->createRequest('GET', '/characters');
             $response = $app->handle($request);
 

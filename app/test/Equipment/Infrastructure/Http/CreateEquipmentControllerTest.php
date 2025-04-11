@@ -3,8 +3,8 @@
 namespace App\Test\Equipment\Infrastructure\Http;
 
 use App\Equipment\Domain\EquipmentRepository;
+use App\Equipment\Infrastructure\Http\CreateEquipmentController;
 use PDO;
-
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
@@ -34,8 +34,10 @@ class CreateEquipmentControllerTest extends TestCase
                 $ids = implode(',', $this->insertedEquipmentIds);
                 $this->pdo->exec("DELETE FROM equipments WHERE id IN ($ids)");
             }
+
         } catch (\Exception $e) {
             error_log("Error al limpiar registros en tearDown: " . $e->getMessage());
+
         } finally {
             $this->insertedEquipmentIds = [];
         }
@@ -51,7 +53,7 @@ class CreateEquipmentControllerTest extends TestCase
     /**
      * @test
      * @group happy-path
-     * @group integration
+     * @group acceptance
      * @group equipment
      * @group create-equipment
      */
@@ -78,7 +80,7 @@ class CreateEquipmentControllerTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertArrayHasKey('equipment', $responseData);
         $this->assertArrayHasKey('message', $responseData);
-        $this->assertEquals('El equipamiento se ha creado correctamente', $responseData['message']);
+        $this->assertEquals(CreateEquipmentController::getSuccessMessage(), $responseData['message']);
 
         $repository = $app->getContainer()->get(EquipmentRepository::class);
         $createdEquipment = $repository->findById($responseData['equipment']['id']);
@@ -91,7 +93,7 @@ class CreateEquipmentControllerTest extends TestCase
     /**
      * @test
      * @group unhappy-path
-     * @group integration
+     * @group acceptance
      * @group equipment
      * @group create-equipment
      */
@@ -119,7 +121,7 @@ class CreateEquipmentControllerTest extends TestCase
     /**
      * @test
      * @group unhappy-path
-     * @group integration
+     * @group acceptance
      * @group equipment
      * @group create-equipment
      */
@@ -147,7 +149,7 @@ class CreateEquipmentControllerTest extends TestCase
     /**
      * @test
      * @group unhappy-path  
-     * @group integration
+     * @group acceptance
      * @group equipment
      * @group create-equipment
      */

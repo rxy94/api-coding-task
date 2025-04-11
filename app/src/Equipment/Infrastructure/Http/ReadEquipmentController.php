@@ -12,7 +12,6 @@ class ReadEquipmentController {
 
     private const SUCCESS_MESSAGE = 'Equipos obtenidos correctamente';
     private const ERROR_MESSAGE = 'Error al obtener los equipos';
-
     public function __construct(
         private ReadEquipmentUseCase $readEquipmentUseCase
     ) {
@@ -47,8 +46,7 @@ class ReadEquipmentController {
 
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
-                'error' => self::ERROR_MESSAGE,
-                'message' => $e->getMessage()
+                'message' => self::ERROR_MESSAGE
             ]));
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);

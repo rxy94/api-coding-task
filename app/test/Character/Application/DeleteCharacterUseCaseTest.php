@@ -6,11 +6,8 @@ use App\Character\Application\DeleteCharacterUseCase;
 use App\Character\Domain\Character;
 use App\Character\Domain\CharacterRepository;
 use App\Character\Domain\Exception\CharacterNotFoundException;
-use App\Character\Domain\Exception\CharacterValidationException;
 use App\Character\Infrastructure\InMemory\ArrayCharacterRepository;
-use DomainException;
 use PHPUnit\Framework\TestCase;
-use App\Test\Character\Application\MotherObject\CreateCharacterUseCaseRequestMotherObject;
 
 class DeleteCharacterUseCaseTest extends TestCase
 {
